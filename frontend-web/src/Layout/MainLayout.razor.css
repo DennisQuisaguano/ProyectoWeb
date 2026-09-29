@@ -1,0 +1,45 @@
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+    background-color: #f8fafc;
+}
+
+.sidebar {
+    background-color: #003865;
+    box-shadow: 2px 0 16px rgba(0, 32, 58, 0.25);
+}
+
+.top-row {
+    background-color: #ffffff;
+    border-bottom: 1px solid #cbd5e1;
+    min-height: 4.25rem;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+@media (min-width: 641px) {
+    .page {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        width: 270px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    .top-row, article {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+}

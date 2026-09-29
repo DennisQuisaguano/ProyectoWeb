@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Sistema Gastronómico UTA - Administración</title>
+
+    <base href="/" />
+
+    <link rel="preload" id="webassembly" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet" href="lib/bootstrap-icons/bootstrap-icons.min.css" />
+
+    <link rel="stylesheet" href="css/app.css" />
+
+    <link rel="icon" type="image/png" href="favicon.png" />
+
+    <link href="src.styles.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+
+    <script type="importmap"></script>
+
+
+
+    <style>
+
+        .uta-swal {
+
+            border-top: 6px solid #003865 !important;
+
+            border-radius: 1.2rem !important;
+
+            padding-top: 1rem !important;
+
+        }
+
+        .uta-swal .swal2-title {
+
+            color: #003865 !important;
+
+            font-size: 1.5rem !important;
+
+            font-weight: 700 !important;
+
+        }
+
+        .uta-swal .swal2-html-container {
+
+            font-size: 1.05rem !important;
+
+            color: #475569 !important;
+
+        }
+
+        .uta-swal .swal2-confirm, .uta-swal .swal2-cancel {
+
+            border-radius: 50rem !important; /* rounded-pill */
+
+            padding: 0.6rem 1.5rem !important;
+
+            font-weight: 600 !important;
+
+            letter-spacing: 0.5px !important;
+
+        }
+
+    </style>
+
+</head>
+
+
+
+<body>
+
+    <div id="app">
+
+        <svg class="loading-progress">
+
+            <circle r="40%" cx="50%" cy="50%" />
+
+            <circle r="40%" cx="50%" cy="50%" />
+
+        </svg>
+
+        <div class="loading-progress-text"></div>
+
+    </div>
+
+
+
+    <div id="blazor-error-ui">
+
+        An unhandled error has occurred.
+
+        <a href="." class="reload">Reload</a>
+
+        <span class="dismiss">🗙</span>
+
+    </div>
+
+    <script>
+
+        window.getGeolocation = async () => {
+
+            return new Promise((resolve, reject) => {
+
+                if (!navigator.geolocation) {
+
+                    reject("Geolocalización no soportadía por el navegador.");
+
+                } else {
+
+                    navigator.geolocation.getCurrentPosition(
+
+                        (position) => {
+
+                            resolve({
+
+                                latitud: position.coords.latitude,
+
+                                longitud: position.coords.longitude
+
+                            });
+
+                        },
+
+                        (error) => {
+
+                            reject(error.message);
+
+                        },
+
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+
+                    );
+
+                }
+
+            });
+
+        };
+
+    
+
+        window.initializeMap = (lat, lng, dotNetHelper) => {
+
+            setTimeout(() => {
+
+                var mapContainer = document.getElementById('map');
+
+                if (!mapContainer) return;
+
+                
+
+                if (window.leafletMap) {
+
+                    window.leafletMap.remove();
+
+                }
+
+
+
+                var map = L.map('map').setView([lat, lng], 15);
+
+                window.leafletMap = map;
+
+
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+                    attribution: '&copy; OpenStreetMap contributors'
+
+                }).addTo(map);
+
+
+
+                var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+
+
+                // Initialize first load string if needed
+
+                dotNetHelper.invokeMethodAsync('UpdateLocationFromMap', lat, lng, "");
+
+
+
+                marker.on('dragend', function (e) {
+
+                    var position = marker.getLatLng();
+
+                    
+
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.lat}&lon=${position.lng}&zoom=18&addressdetails=1`)
+
+                        .then(response => response.json())
+
+                        .then(data => {
+
+                            var address = data.address;
+
+                            var street = address.road || "";
+
+                            var suburb = address.suburb || address.neighbourhood || "";
+
+                            var shortAddress = street;
+
+                            if (suburb) {
+
+                                shortAddress += (shortAddress ? ", " : "") + suburb;
+
+                            }
+
+                            if (!shortAddress) {
+
+                                shortAddress = data.display_name.split(',').slice(0, 2).join(', ');
+
+                            }
+
+                            dotNetHelper.invokeMethodAsync('UpdateLocationFromMap', position.lat, position.lng, shortAddress);
+
+                        })
+
+                        .catch(err => {
+
+                            console.error("Error geocoding:", err);
+
+                            dotNetHelper.invokeMethodAsync('UpdateLocationFromMap', position.lat, position.lng, "");
+
+                        });
+
+                });
+
+            }, 500); 
+
+        };
+
+</script>
+
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+
+
+
+    <!-- SweetAlert2 para menúsajes de confirmacin -->
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        window.confirmarAccion = function(mensaje) {
+            return Swal.fire({
+                title: '¿Estás seguro?',
+                text: mensaje,
+                icon: 'warning',
+                iconColor: '#003865',
+                showCancelButton: true,
+                confirmButtonColor: '#003865',
+                cancelButtonColor: '#e2e8f0',
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: '<span style="color: #475569">Cancelar</span>',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'uta-swal shadow-lg'
+                }
+            }).then((result) => {
+                return result.isConfirmed;
+            });
+        };
+
+        window.mostrarMensajeExito = function(mensaje) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+            Toast.fire({
+                icon: 'success',
+                title: mensaje
+            });
+        };
+
+        window.mostrarMensajeError = function(mensaje) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4500,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+            Toast.fire({
+                icon: 'error',
+                title: mensaje
+            });
+        };
+    </script>
+</body>
+
+
+
+
+
+</html>
+

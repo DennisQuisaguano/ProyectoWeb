@@ -1,0 +1,414 @@
+﻿@page "/admin/locales"
+@attribute [Authorize(Roles = "Administrador")]
+@inject AdminService AdminService
+@inject LocalService LocalService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+@inject IJSRuntime JS
+
+<PageTitle>Validación de Locales - Administración UTA</PageTitle>
+
+<!-- Encabezado Limpio -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1 text-dark">
+            <i class="bi bi-file-earmark-check-fill text-primary me-2"></i>Validación de Locales
+        </h2>
+        <p class="text-muted small mb-0">Revisa la documentación y certificados RUC emitidos por el SRI para autorizar la publicación de comedores.</p>
+    </div>
+
+    <div class="d-flex gap-2 mt-3 mt-md-0">
+        <button class="btn btn-outline-primary fw-bold px-3 shadow-sm" @onclick="CargarLocales">
+            <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+        </button>
+    </div>
+</div>
+
+@if (!esAdmin && !cargando)
+{
+    <div class="alert alert-danger p-4 rounded-4 shadow-sm" role="alert">
+        <h5 class="alert-heading fw-bold"><i class="bi bi-shield-lock-fill me-2"></i>Acceso Restringido</h5>
+        <p class="mb-0">Esta sección es exclusiva para administradores.</p>
+    </div>
+}
+else
+{
+    <!-- Filtro de Estados en Tarjeta Sutil -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn @(filtroEstado == null ? "btn-primary" : "btn-light text-muted border") rounded-pill px-3 py-1 fw-bold small shadow-sm"
+                    @onclick="() => FiltrarPorEstado(null)">
+                Todos (@locales.Count)
+            </button>
+            <button class="btn @(filtroEstado == EstadoAprobacionLocalModel.Pendiente ? "btn-primary" : "btn-light text-muted border") rounded-pill px-3 py-1 fw-bold small shadow-sm"
+                    @onclick="() => FiltrarPorEstado(EstadoAprobacionLocalModel.Pendiente)">
+                <i class="bi bi-clock-history me-1"></i> Pendientes (@locales.Count(l => l.EstadoAprobacion == EstadoAprobacionLocalModel.Pendiente))
+            </button>
+            <button class="btn @(filtroEstado == EstadoAprobacionLocalModel.Aprobado ? "btn-primary" : "btn-light text-muted border") rounded-pill px-3 py-1 fw-bold small shadow-sm"
+                    @onclick="() => FiltrarPorEstado(EstadoAprobacionLocalModel.Aprobado)">
+                <i class="bi bi-check-circle me-1"></i> Aprobados (@locales.Count(l => l.EstadoAprobacion == EstadoAprobacionLocalModel.Aprobado))
+            </button>
+            <button class="btn @(filtroEstado == EstadoAprobacionLocalModel.Rechazado ? "btn-primary" : "btn-light text-muted border") rounded-pill px-3 py-1 fw-bold small shadow-sm"
+                    @onclick="() => FiltrarPorEstado(EstadoAprobacionLocalModel.Rechazado)">
+                <i class="bi bi-x-circle me-1"></i> Rechazados (@locales.Count(l => l.EstadoAprobacion == EstadoAprobacionLocalModel.Rechazado))
+            </button>
+        </div>
+    </div>
+
+    
+
+    
+
+    @if (cargando)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted fw-semibold">Cargando solicitudes...</p>
+        </div>
+    }
+    else if (localesFiltrados.Count == 0)
+    {
+        <div class="card border-0 shadow-sm text-center p-5 rounded-4 bg-white">
+            <div class="d-inline-flex p-3 mx-auto mb-2 text-muted">
+                <i class="bi bi-inbox fs-1"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-1">No hay solicitudes en esta categoría</h5>
+            <p class="text-muted small">No se encontraron establecimientos registrados con el filtro seleccionado.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var local in localesFiltrados)
+            {
+                <div class="col-12 col-xl-6" @key="local.Id">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 bg-white overflow-hidden">
+                        <!-- Portada con Gradiente y Logo -->
+                        <div class="position-relative" style="height: 140px; background: linear-gradient(135deg, #001f38 0%, #003865 100%);">
+                            @if (!string.IsNullOrEmpty(local.PortadaUrl))
+                            {
+                                <img src="@ObtenerUrlArchivo(local.PortadaUrl)" class="w-100 h-100 object-fit-cover opacity-75" alt="Portada de local" />
+                            }
+                            else
+                            {
+                                <i class="bi bi-shop position-absolute top-50 start-50 translate-middle text-white opacity-25" style="font-size: 5rem;"></i>
+                            }
+
+                            <!-- Gradiente de oscurecimiento inferior para que el texto resalte si hubiera -->
+                            <div class="position-absolute w-100 h-100 top-0 start-0" style="background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);"></div>
+
+                            <!-- Estado del RUC -->
+                            <div class="position-absolute top-0 end-0 p-3 z-1">
+                                @switch (local.EstadoAprobacion)
+                                {
+                                    case EstadoAprobacionLocalModel.Pendiente:
+                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm fw-bold"><i class="bi bi-clock-history me-1"></i> En Revisión</span>
+                                        break;
+                                    case EstadoAprobacionLocalModel.Aprobado:
+                                        <span class="badge bg-success px-3 py-2 rounded-pill shadow-sm fw-bold"><i class="bi bi-check-circle me-1"></i> Aprobado</span>
+                                        break;
+                                    case EstadoAprobacionLocalModel.Rechazado:
+                                        <span class="badge bg-danger px-3 py-2 rounded-pill shadow-sm fw-bold"><i class="bi bi-x-circle me-1"></i> Rechazado</span>
+                                        break;
+                                }
+                            </div>
+                            
+                            <!-- Logo Flotante -->
+                            <div class="position-absolute bottom-0 start-0 más-4 z-1" style="transform: translateY(40%);">
+                                <div class="rounded-circle overflow-hidden border border-4 border-white shadow bg-white" style="width: 80px; height: 80px;">
+                                    @if (!string.IsNullOrEmpty(local.LogoUrl))
+                                    {
+                                        <img src="@ObtenerUrlArchivo(local.LogoUrl)" class="w-100 h-100 object-fit-cover" alt="Logo de local" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-primary fs-3 fw-bold">
+                                            @(string.IsNullOrWhiteSpace(local.Nombre) ? "?" : local.Nombre.Substring(0, 1).ToUpper())
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4 pt-5 d-flex flex-column">
+                            <div class="mt-2 mb-3">
+                                <h4 class="fw-bold text-dark mb-1">@local.Nombre</h4>
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold px-2 py-1">
+                                        @local.Categoria
+                                    </span>
+                                    <span class="badge bg-primary text-white shadow-sm border-0 fw-semibold px-2 py-1">
+                                        <i class="bi bi-geo-alt-fill me-1 text-white"></i> @local.CampusCercano
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Bloque de Contacto -->
+                            <div class="p-3 mb-3 bg-light border rounded-3 flex-grow-1">
+                                <div class="mb-2">
+                                    <i class="bi bi-person-badge text-primary me-2"></i>
+                                    <strong class="text-dark">Propietario:</strong> <span class="fw-medium text-dark">@(local.PropietarioNombre ?? "No especificado")</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(local.PropietarioEmail))
+                                {
+                                    <div class="mb-2 más-4 text-muted small">
+                                        <i class="bi bi-envelope text-muted me-1"></i> @local.PropietarioEmail
+                                    </div>
+                                }
+                                <div class="d-flex text-muted small mt-2">
+                                    <i class="bi bi-geo-alt text-primary me-2" style="width:16px;"></i>
+                                    <span><strong class="text-dark">Dirección:</strong> @local.Direccion @(string.IsNullOrEmpty(local.Referencia) ? "" : $"({local.Referencia})")</span>
+                                </div>
+                                <div class="d-flex text-muted small mt-1">
+                                    <i class="bi bi-telephone text-primary me-2" style="width:16px;"></i>
+                                    <span><strong class="text-dark">Contacto:</strong> @(local.TelefonoContacto ?? local.WhatsApp ?? "Sin teléfono")</span>
+                                </div>
+                                
+                                @if (local.EstadoAprobacion == EstadoAprobacionLocalModel.Rechazado && !string.IsNullOrWhiteSpace(local.MotivoRechazo))
+                                {
+                                    <div class="mt-3 p-3 bg-danger-subtle text-danger rounded border border-danger-subtle small shadow-sm">
+                                        <strong class="d-block mb-1"><i class="bi bi-info-circle-fill me-1"></i> Motivo del rechazo:</strong>
+                                        @local.MotivoRechazo
+                                    </div>
+                                }
+                            </div>
+                            
+                            <!-- Acciones Inferiores -->
+                            <div class="border-top pt-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                <div>
+                                    @if (!string.IsNullOrWhiteSpace(local.CertificadoRucUrl))
+                                    {
+                                        var fullUrl = ObtenerUrlArchivo(local.CertificadoRucUrl);
+                                        <button class="btn btn-light border text-dark btn-sm rounded-pill fw-bold px-3 shadow-sm d-flex align-items-center gap-1 hover-elevate" @onclick="() => AbrirModalPdf(fullUrl)">
+                                            <i class="bi bi-file-earmark-pdf-fill text-danger fs-6"></i> Ver RUC
+                                        </button>
+                                    }
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    @if (local.EstadoAprobacion != EstadoAprobacionLocalModel.Aprobado)
+                                    {
+                                        var sinRuc = string.IsNullOrEmpty(local.CertificadoRucUrl);
+                                        <button class="btn btn-primary btn-sm px-4 fw-bold rounded-3 shadow-sm"
+                                                @onclick="() => AprobarSolicitud(local)"
+                                                disabled="@(procesando || sinRuc)">
+                                            <i class="bi bi-check2 me-1"></i> Aprobar
+                                        </button>
+                                    }
+
+                                    @if (local.EstadoAprobacion != EstadoAprobacionLocalModel.Rechazado)
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm px-3 fw-bold rounded-3"
+                                                @onclick="() => AbrirModalRechazo(local)"
+                                                disabled="@procesando">
+                                            Rechazar
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+<!-- Modal de Rechazo con Motivo -->
+@if (mostrarModalRechazo && localSeleccionado != null)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.6);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+                <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+                    <h5 class="modal-title fw-bold text-white mb-0">Rechazar Solicitud RUC</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalRechazo"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-dark mb-3">
+                        Indica el motivo por el cual no se aprueba el establecimiento <strong>@localSeleccionado.Nombre</strong>. Este mensaje se enviar por correo electrnico al dueño.
+                    </p>
+
+                    <div class="mb-3">
+                        <textarea class="form-control bg-light" rows="4" 
+                                  placeholder="Ej: El certificado RUC adjunto est borroso o no coincide con el propietario."
+                                  @bind="motivoRechazo"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-top-0 px-4 py-3 d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-light fw-bold" @onclick="CerrarModalRechazo">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm"
+                            @onclick="ConfirmarRechazo"
+                            disabled="@(procesando || string.IsNullOrWhiteSpace(motivoRechazo))">
+                        Enviar Rechazo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<!-- Modal Visor PDF RUC -->
+@if (mostrarModalPdf)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6);">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white border-bottom rounded-top-4">
+                    <h5 class="modal-title fw-bold text-white"><i class="bi bi-file-earmark-pdf-fill text-white me-2"></i>Documento RUC</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalPdf"></button>
+                </div>
+                <div class="modal-body p-0" style="height: 75vh;">
+                    <iframe src="@pdfUrlActual" width="100%" height="100%" style="border: none;"></iframe>
+                </div>
+                <div class="modal-footer border-top-0 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" @onclick="CerrarModalPdf">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private bool cargando = true;
+    private bool procesando = false;
+    private bool esAdmin = false;
+    private string? mensajeExito;
+    private string? mensajeError;
+
+    private List<LocalModel> locales = new();
+    private EstadoAprobacionLocalModel? filtroEstado = null;
+
+    private bool mostrarModalRechazo = false;
+    private LocalModel? localSeleccionado;
+    private string motivoRechazo = string.Empty;
+
+    private List<LocalModel> localesFiltrados => locales
+        .Where(l => !filtroEstado.HasValue || l.EstadoAprobacion == filtroEstado.Value)
+        .ToList();
+
+    
+    private bool mostrarModalPdf = false;
+    private string pdfUrlActual = "";
+
+    private void AbrirModalPdf(string url)
+    {
+        pdfUrlActual = url;
+        mostrarModalPdf = true;
+    }
+
+    private void CerrarModalPdf()
+    {
+        mostrarModalPdf = false;
+        pdfUrlActual = "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await AuthService.GetCurrentUserAsync();
+        if (user != null && user.Rol.Equals("Administrador", StringComparison.OrdinalIgnoreCase))
+        {
+            esAdmin = true;
+            await CargarLocales();
+        }
+        else
+        {
+            esAdmin = false;
+            cargando = false;
+        }
+    }
+
+    private async Task CargarLocales()
+    {
+        cargando = true;
+        
+        
+
+        locales = await LocalService.GetLocalesPendientesAsync(null);
+        cargando = false;
+    }
+
+    private void FiltrarPorEstado(EstadoAprobacionLocalModel? estado)
+    {
+        filtroEstado = estado;
+    }
+
+    private string ObtenerUrlArchivo(string rutaRelativa)
+    {
+        var baseUrl = Configuration["ApiBaseUrl"] ?? "http://localhost:5050/";
+        return $"{baseUrl.TrimEnd('/')}/{rutaRelativa.TrimStart('/')}";
+    }
+
+    private async Task AprobarSolicitud(LocalModel local)
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", $"Estás seguro de aprobar el local '{local.Nombre}'? Al aprobarlo, el dueño podr empezar a publicar platos.");
+        if (!confirmed) return;
+        
+        procesando = true;
+        
+        
+
+        var (eéeééééxito, actualizado, másg) = await LocalService.AprobarLocalAsync(local.Id);
+        if (eéeééééxito && actualizado != null)
+        {
+            local.EstadoAprobacion = EstadoAprobacionLocalModel.Aprobado;
+            local.EstaAbierto = true;
+            local.MotivoRechazo = null;
+            await JS.InvokeVoidAsync("mostrarMensajeExito", $"El local '{local.Nombre}' fue aprobado y notificado al comerciante.");
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("mostrarMensajeError", másg ?? "Error al aprobar la solicitud.");
+        }
+
+        procesando = false;
+    }
+
+    private void AbrirModalRechazo(LocalModel local)
+    {
+        localSeleccionado = local;
+        motivoRechazo = string.Empty;
+        mostrarModalRechazo = true;
+    }
+
+    private void CerrarModalRechazo()
+    {
+        mostrarModalRechazo = false;
+        localSeleccionado = null;
+        motivoRechazo = string.Empty;
+    }
+
+    private async Task ConfirmarRechazo()
+    {
+        if (localSeleccionado == null || string.IsNullOrWhiteSpace(motivoRechazo)) return;
+
+        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", $"Estás seguro de enviar este motivo de rechazo y requerir correcciones para '{localSeleccionado.Nombre}'?");
+        if (!confirmed) return;
+
+        procesando = true;
+        
+        
+
+        var (eéeééééxito, actualizado, másg) = await LocalService.RechazarLocalAsync(localSeleccionado.Id, motivoRechazo);
+        if (eéeééééxito && actualizado != null)
+        {
+            localSeleccionado.EstadoAprobacion = EstadoAprobacionLocalModel.Rechazado;
+            localSeleccionado.EstaAbierto = false;
+            localSeleccionado.MotivoRechazo = motivoRechazo;
+            await JS.InvokeVoidAsync("mostrarMensajeExito", $"La solicitud del local '{localSeleccionado.Nombre}' fue rechazada.");
+            CerrarModalRechazo();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("mostrarMensajeError", másg ?? "Error al rechazar la solicitud.");
+        }
+
+        procesando = false;
+    }
+}
+

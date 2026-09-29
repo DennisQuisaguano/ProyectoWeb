@@ -1,0 +1,187 @@
+﻿@page "/resenas"
+@attribute [Authorize]
+
+<PageTitle>Opiniones y Reseñas - Sistema Gastronómico UTA</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+        <h2 class="fw-bold mb-1 text-dark">Opiniones y Reseñas</h2>
+        <p class="text-muted small mb-0">Descubre lo que los estudiantes dicen sobre tu local y platos</p>
+    </div>
+</div>
+
+
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-md-4">
+        <!-- Tarjeta de Calificación Global -->
+        <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-4 text-center">
+            <h5 class="fw-bold text-muted small text-uppercase mb-3">Calificación Global</h5>
+            <h1 class="display-1 fw-bold text-dark mb-0">4.8</h1>
+            <div class="text-warning fs-4 mb-2">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-half"></i>
+            </div>
+            <p class="text-muted small fw-semibold mb-0">Basado en 124 opiniones</p>
+        </div>
+    </div>
+    
+    <div class="col-12 col-md-8">
+        <!-- Resumen de progreso -->
+        <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-4">
+            <h5 class="fw-bold text-muted small text-uppercase mb-3">Distribución de opiniones</h5>
+            
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <span class="text-dark small fw-bold" style="width: 25px;">5 <i class="bi bi-star-fill text-warning"></i></span>
+                <div class="progress flex-grow-1" style="height: 10px;">
+                    <div class="progress-bar bg-success rounded-pill" style="width: 75%"></div>
+                </div>
+                <span class="text-muted small" style="width: 30px;">93</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <span class="text-dark small fw-bold" style="width: 25px;">4 <i class="bi bi-star-fill text-warning"></i></span>
+                <div class="progress flex-grow-1" style="height: 10px;">
+                    <div class="progress-bar bg-primary rounded-pill" style="width: 15%"></div>
+                </div>
+                <span class="text-muted small" style="width: 30px;">19</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <span class="text-dark small fw-bold" style="width: 25px;">3 <i class="bi bi-star-fill text-warning"></i></span>
+                <div class="progress flex-grow-1" style="height: 10px;">
+                    <div class="progress-bar bg-info rounded-pill" style="width: 5%"></div>
+                </div>
+                <span class="text-muted small" style="width: 30px;">6</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <span class="text-dark small fw-bold" style="width: 25px;">2 <i class="bi bi-star-fill text-warning"></i></span>
+                <div class="progress flex-grow-1" style="height: 10px;">
+                    <div class="progress-bar bg-warning rounded-pill" style="width: 3%"></div>
+                </div>
+                <span class="text-muted small" style="width: 30px;">4</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-dark small fw-bold" style="width: 25px;">1 <i class="bi bi-star-fill text-warning"></i></span>
+                <div class="progress flex-grow-1" style="height: 10px;">
+                    <div class="progress-bar bg-danger rounded-pill" style="width: 2%"></div>
+                </div>
+                <span class="text-muted small" style="width: 30px;">2</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros de reseñas -->
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <button class="filter-tab-pill active-primary border-0 shadow-sm">
+        Todas las Opiniones
+    </button>
+    <button class="filter-tab-pill bg-white text-muted border shadow-sm">
+        Sobre el Local
+    </button>
+    <button class="filter-tab-pill bg-white text-muted border shadow-sm">
+        Sobre Platos
+    </button>
+</div>
+
+<!-- Lista de Reseñas de Prueba -->
+<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="list-group list-group-flush">
+        
+        <!-- Reseña 1 -->
+        <div class="list-group-item p-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                        JP
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">Juan Pérez</h6>
+                        <span class="text-muted small">Hace 2 días</span>
+                    </div>
+                </div>
+                <div class="text-warning">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                </div>
+            </div>
+            <div class="mt-2 mb-2">
+                <span class="badge bg-light text-dark border"><i class="bi bi-shop me-1 text-primary"></i> Sobre el Local</span>
+            </div>
+            <p class="text-muted small mb-0">
+                ¡Excelente lugar! La atención es muy rápida y el local siempre está limpio. Perfecto para almorzar entre clases en el campus Huachi.
+            </p>
+        </div>
+
+        <!-- Reseña 2 -->
+        <div class="list-group-item p-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                        MR
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">María Rodríguez</h6>
+                        <span class="text-muted small">Hace 5 días</span>
+                    </div>
+                </div>
+                <div class="text-warning">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                </div>
+            </div>
+            <div class="mt-2 mb-2">
+                <span class="badge bg-light text-dark border"><i class="bi bi-egg-fried me-1 text-success"></i> Almuerzo Completo</span>
+            </div>
+            <p class="text-muted small mb-0">
+                El almuerzo es súper rico y la porción es generosa. Le quito una estrella porque el jugo estaba un poco simple, pero todo lo demás excelente.
+            </p>
+        </div>
+
+        <!-- Reseña 3 -->
+        <div class="list-group-item p-4">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                        CA
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">Carlos Altamirano</h6>
+                        <span class="text-muted small">Hace 1 semana</span>
+                    </div>
+                </div>
+                <div class="text-warning">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                </div>
+            </div>
+            <div class="mt-2 mb-2">
+                <span class="badge bg-light text-dark border"><i class="bi bi-tag-fill me-1 text-warning"></i> Promo: 2x1 en Hamburguesas</span>
+            </div>
+            <p class="text-muted small mb-0">
+                La promo es buena pero demoraron más de lo normal en entregarme el pedido. Sería bueno que agilicen un poco más cuando hay promociones grandes.
+            </p>
+        </div>
+        
+    </div>
+</div>
+
+<style>
+    .filter-tab-pill {
+        border-radius: 50rem;
+        padding: 0.5rem 1.2rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s ease-in-out;
+    }
+    .active-primary {
+        background-color: #e6f0ff;
+        color: #0d6efd;
+    }
+</style>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Esta página es puramente visual de momento.
+    }
+}

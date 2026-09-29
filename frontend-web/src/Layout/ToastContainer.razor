@@ -1,0 +1,68 @@
+@inject NotificationService NotificationService
+@implements IDisposable
+
+<div class="toast-container position-fixed p-3" style="z-index: 9999; top: 65px; right: 10px;">
+    @foreach (var toast in _activeToasts)
+    {
+        var iconClass = toast.Tipo switch
+        {
+            "success" => "bi-check-circle-fill text-success",
+            "error" => "bi-x-circle-fill text-danger",
+            "warning" => "bi-exclamation-triangle-fill text-warning",
+            _ => "bi-info-circle-fill text-info"
+        };
+
+        <div class="toast show align-items-center border-0 bg-primary text-white mb-2 shadow-lg rounded-3" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex p-1">
+                <div class="toast-body d-flex align-items-center fw-semibold">
+                    <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 32px; height: 32px;">
+                        <i class="bi @iconClass fs-5"></i>
+                    </div>
+                    @toast.Mensaje
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" @onclick="() => Remover(toast)"></button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<NotificationMessage> _activeToasts = new();
+
+    protected override void OnInitialized()
+    {
+        NotificationService.OnToastRequested += MostrarToast;
+    }
+
+    private void MostrarToast(NotificationMessage toast)
+    {
+        _activeToasts.Add(toast);
+        InvokeAsync(StateHasChanged);
+
+        // Remover automáticamente después de 4 segundos
+        var timer = new System.Timers.Timer(5000);
+        timer.Elapsed += (s, e) =>
+        {
+            InvokeAsync(() =>
+            {
+                Remover(toast);
+                timer.Dispose();
+            });
+        };
+        timer.Start();
+    }
+
+    private void Remover(NotificationMessage toast)
+    {
+        if (_activeToasts.Contains(toast))
+        {
+            _activeToasts.Remove(toast);
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnToastRequested -= MostrarToast;
+    }
+}

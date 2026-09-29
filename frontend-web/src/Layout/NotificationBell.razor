@@ -1,0 +1,99 @@
+@inject NotificationService NotificationService
+@implements IDisposable
+
+<div class="d-inline-block me-3 position-relative">
+    <button title="Notificaciones" class="btn btn-light rounded-circle border p-2 position-relative d-flex align-items-center justify-content-center" 
+            style="width: 40px; height: 40px;" type="button" @onclick="ToggleDropdown">
+        <i class="bi bi-bell-fill text-secondary"></i>
+        @if (UnreadCount > 0)
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                @UnreadCount
+            </span>
+        }
+    </button>
+
+    @if (isDropdownOpen)
+    {
+        <div class="position-fixed top-0 start-0 w-100 h-100" style="z-index: 1040;" @onclick="HideDropdown"></div>
+        <div class="position-absolute shadow-lg border-0 rounded-3 bg-white overflow-hidden" 
+             style="width: 340px; margin-top: 10px; z-index: 1050; right: 0;">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-primary text-white">
+                <span class="fw-bold"><i class="bi bi-bell me-2"></i>Notificaciones</span>
+                @if (UnreadCount > 0)
+                {
+                    <button class="btn btn-sm btn-light text-primary p-1 px-2 fw-semibold rounded-pill" style="font-size: 0.75rem;" @onclick="MarcarLeidas">Marcar leídas</button>
+                }
+            </div>
+            <div class="p-0 overflow-auto" style="max-height: 380px;">
+                @if (!NotificationService.Notificaciones.Any())
+                {
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-inbox fs-2 d-block mb-2 text-black-50"></i>
+                        No tienes notificaciones
+                    </div>
+                }
+                else
+                {
+                    @foreach (var noti in NotificationService.Notificaciones)
+                    {
+                        <div class="p-3 border-bottom @(!noti.Leida ? "bg-light" : "")" style="transition: background-color 0.2s;">
+                            <div class="d-flex align-items-start gap-3">
+                                @if (noti.Tipo == "success") { <i class="bi bi-check-circle-fill text-success fs-5"></i> }
+                                else if (noti.Tipo == "error") { <i class="bi bi-x-circle-fill text-danger fs-5"></i> }
+                                else { <i class="bi bi-info-circle-fill text-primary fs-5"></i> }
+                                
+                                <div class="flex-grow-1">
+                                    <div class="small @(!noti.Leida ? "fw-bold text-dark" : "text-secondary") lh-sm mb-1">@noti.Mensaje</div>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">@noti.Fecha.ToString("g")</div>
+                                </div>
+
+                                @if (!noti.Leida)
+                                {
+                                    <div class="bg-primary rounded-circle mt-1 shadow-sm" style="width: 10px; height: 10px; flex-shrink: 0;"></div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isDropdownOpen = false;
+    private int UnreadCount => NotificationService.Notificaciones.Count(n => !n.Leida);
+
+    protected override async Task OnInitializedAsync()
+    {
+        NotificationService.OnChange += HandleChange;
+        await NotificationService.InitializeAsync();
+    }
+
+    private void HandleChange()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleDropdown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+    }
+
+    private void HideDropdown()
+    {
+        isDropdownOpen = false;
+    }
+
+    private void MarcarLeidas()
+    {
+        NotificationService.MarcarTodasComoLeidas();
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnChange -= HandleChange;
+    }
+}
+

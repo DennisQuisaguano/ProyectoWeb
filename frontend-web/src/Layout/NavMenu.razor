@@ -1,0 +1,334 @@
+﻿<div class="top-row ps-3 navbar navbar-dark bg-uta-sidebar-header border-bottom border-secondary border-opacity-25">
+
+
+    <div class="container-fluid">
+
+
+        <a class="navbar-brand d-flex align-items-center gap-2 text-white fw-bold py-2" href="">
+
+
+            <span class="bg-white text-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;">
+
+
+                <i class="bi bi-mortarboard-fill text-uta-brand"></i>
+
+
+            </span>
+
+
+            <div class="d-flex flex-column lh-1">
+
+
+                <span class="fs-6 fw-bold text-white">UTA Gastronomía</span>
+
+
+                <span class="text-white-50 text-uppercase tracking-wider" style="font-size: 0.65rem;">Panel Administrativo</span>
+
+
+            </div>
+
+
+        </a>
+
+
+        <button title="Menú de navegación" class="navbar-toggler" @onclick="ToggleNavMenu">
+
+
+            <span class="navbar-toggler-icon"></span>
+
+
+        </button>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+
+
+    <AuthorizeView>
+
+
+        <Authorized>
+
+
+            <nav class="nav flex-column py-3">
+
+
+                <AuthorizeView Roles="Administrador" Context="adminAuth">
+
+
+                    <Authorized>
+
+
+                        <div class="px-3 mb-2 text-uppercase text-white-50 fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">
+
+
+                            Panel Administrador UTA
+
+
+                        </div>
+
+
+                        <div class="nav-item px-3 mb-2">
+
+
+                            <NavLink class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3" href="" Match="NavLinkMatch.All">
+
+
+                                <i class="bi bi-speedometer2 fs-5 text-white-70"></i>
+
+
+                                <span>Dashboard Global</span>
+
+
+                            </NavLink>
+
+
+                        </div>
+
+
+                        <div class="nav-item px-3 mb-2">
+
+
+                            <NavLink class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3" href="admin/gestion-locales">
+
+
+                                <i class="bi bi-shop fs-5 text-white-70"></i>
+
+
+                                <span>Gestión de Locales</span>
+
+
+                            </NavLink>
+
+
+                        </div>
+
+
+                        <div class="nav-item px-3 mb-2">
+
+
+                            <NavLink class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3" href="admin/locales"><i class="bi bi-shield-check fs-5 text-white-70"></i><span>Validación de Locales</span></NavLink></div><div class="nav-item px-3 mb-2"><NavLink class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3" href="admin/claves">
+
+
+                                <i class="bi bi-shield-check fs-5 text-white-70"></i>
+
+
+                                <span>Validación de Locales</span>
+
+
+                            </NavLink>
+
+
+                        </div>
+
+
+                    </Authorized>
+
+
+                    <NotAuthorized>
+
+
+                        <div class="px-3 mb-2 text-uppercase text-white-50 fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">
+
+
+                            Mi Establecimiento
+
+
+                        </div>
+
+
+                        <div class="nav-item px-3 mb-2">
+
+
+                            <NavLink class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3" href="" Match="NavLinkMatch.All">
+
+
+                                <i class="bi bi-grid-1x2-fill fs-5"></i>
+
+
+                                <span>Dashboard</span>
+
+
+                            </NavLink>
+
+
+                        </div>
+
+
+                        <div class="nav-item px-3 mb-2">
+
+
+                            <NavLink class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3" href="local">
+
+
+                                <i class="bi bi-shop-window fs-5"></i>
+
+
+                                <span>Mi Local</span>
+
+
+                            </NavLink>
+
+
+                        </div>
+
+
+                        <div class="nav-item px-3 mb-2">
+
+
+                            <NavLink class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3" href="menu">
+
+
+                                <i class="bi bi-egg-fried fs-5"></i>
+
+
+                                <span>Menú y Actualización</span>
+
+
+                            </NavLink>
+
+
+                        </div>
+
+
+                        <div class="nav-item px-3 mb-2">
+
+
+                            <NavLink class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3" href="promociones">
+
+
+                                <i class="bi bi-tags-fill fs-5"></i>
+
+
+                                <span>Promociones</span>
+
+
+                            </NavLink>
+
+
+                        </div>
+
+
+                        <div class="nav-item px-3 mb-2">
+
+
+                            <NavLink class="nav-link d-flex align-items-center gap-3 py-2 px-3 rounded-3" href="resenas">
+
+
+                                <i class="bi bi-chat-heart-fill fs-5"></i>
+
+
+                                <span>Opiniones y Reseñas</span>
+
+
+                            </NavLink>
+
+
+                        </div>
+
+
+                    </NotAuthorized>
+
+
+                </AuthorizeView>
+
+
+            </nav>
+
+
+        </Authorized>
+
+
+    </AuthorizeView>
+
+
+</div>
+
+
+
+
+
+<style>
+
+
+    .bg-uta-sidebar-header {
+
+
+        background-color: #001f38 !important;
+
+
+    }
+
+
+    .text-uta-brand {
+
+
+        color: #004b87 !important;
+
+
+    }
+
+
+    .navbar-brand, .navbar-brand * {
+
+
+        color: #ffffff !important;
+
+
+    }
+
+
+    .navbar-brand .text-white-50 {
+
+
+        color: rgba(255, 255, 255, 0.75) !important;
+
+
+    }
+
+
+</style>
+
+
+
+
+
+@code {
+
+
+    private bool collapseNavMenu = true;
+
+
+
+
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+
+
+
+
+    private void ToggleNavMenu()
+
+
+    {
+
+
+        collapseNavMenu = !collapseNavMenu;
+
+
+    }
+
+
+}
+
+
+

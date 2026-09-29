@@ -1,0 +1,607 @@
+﻿@page "/local"
+@attribute [Authorize]
+@inject LocalService LocalService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+@inject IJSRuntime JS
+@implements IDisposable
+@inject IJSRuntime JSRuntime
+@inject NotificationService NotificationService
+
+<PageTitle>Mi Local - Sistema Gastronómico UTA</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+        <h2 class="fw-bold mb-1 text-dark">Información de Mi Local</h2>
+        <p class="text-muted small mb-0">Configura los datos que verán los estudiantes de la UTA al buscar comida</p>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
+}
+else
+{
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+            <div class="card border shadow-sm rounded-4 bg-white">
+                <div class="card-body p-4 p-md-5">
+                    @if (esEdicion)
+                    {
+                        @if (modelo.EstadoAprobacion == EstadoAprobacionLocalModel.Pendiente)
+                        {
+                            <div class="alert badge-amber d-flex align-items-center mb-4 rounded-3 p-3 border" role="alert">
+                                <i class="bi bi-clock-history fs-3 me-3"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Su local está en revisión por un administrador</h6>
+                                    <p class="mb-0 small opacity-90">Estamos validando tu información y certificado RUC adjunto antes de activar la publicación para los estudiantes de la UTA.</p>
+                                </div>
+                            </div>
+                        }
+                        else if (modelo.EstadoAprobacion == EstadoAprobacionLocalModel.Aprobado)
+                        {
+                            <div class="alert alert-success border-success d-flex align-items-center mb-4 rounded-3 p-3" role="alert">
+                                <i class="bi bi-check-circle-fill fs-3 text-success me-3"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-1 text-dark">¡Local Verificado y Aprobado por la UTA!</h6>
+                                    <p class="mb-0 small text-muted">Tu establecimiento está activo y visible para toda la comunidad universitaria.</p>
+                                </div>
+                            </div>
+                        }
+                        else if (modelo.EstadoAprobacion == EstadoAprobacionLocalModel.Rechazado)
+                        {
+                            <div class="alert alert-danger border-danger mb-4 rounded-3 p-3" role="alert">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-exclamation-triangle-fill fs-4 text-danger me-2"></i>
+                                    <h6 class="fw-bold mb-0 text-danger">Atención: Local Suspendido / Rechazado</h6>
+                                </div>
+                                <div class="bg-white p-2 rounded border border-danger border-opacity-25 small mb-2 text-danger fw-semibold">
+                                    <strong>Motivo indicado:</strong> @modelo.MotivoRechazo
+                                </div>
+                                <p class="small mb-0 text-muted">Tu local ha sido suspendido o tu solicitud rechazada por el administrador. Por favor corrige los inconvenientes indicados, actualiza tus datos y vuelve a guardar para enviar una nueva solicitud de apertura.</p>
+                            </div>
+                        }
+                    }
+
+                    <EditForm EditContext="editContext" OnValidSubmit="GuardarLocal">
+                        <DataAnnotationsValidator />
+
+                        <!-- FOTO DE PORTADA / LOCAL -->
+                        <div class="position-relative mb-4 rounded-4 overflow-hidden shadow-sm border bg-light" style="height: 250px;">
+                            @if (!string.IsNullOrEmpty(modelo.PortadaUrl))
+                            {
+                                <img src="@ObtenerUrlArchivo(modelo.PortadaUrl)" class="w-100 h-100 object-fit-cover" alt="Portada de local" />
+                            }
+                            else
+                            {
+                                <div class="d-flex h-100 w-100 align-items-center justify-content-center bg-light text-muted flex-column">
+                                    <i class="bi bi-shop fs-1 mb-2 opacity-50"></i>
+                                    <span class="fw-semibold">Sin foto de portada</span>
+                                </div>
+                            }
+                            <div class="position-absolute bottom-0 end-0 m-3 z-3">
+                                <label for="portadaUpload" class="btn btn-light shadow-sm rounded-pill fw-semibold border px-3">
+                                    @if (subiendoPortada)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span> <span>Subiendo...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-camera-fill text-primary me-2"></i> @(string.IsNullOrEmpty(modelo.PortadaUrl) ? "Subir Foto del Local" : "Cambiar Foto")
+                                    }
+                                </label>
+                                <InputFile id="portadaUpload" OnChange="SubirFotoPortada" class="d-none" accept="image/png, image/jpeg, image/webp" disabled="@subiendoPortada" />
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-3 text-dark pb-2 border-bottom">Datos Principales</h5>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold small text-dark">Nombre del Establecimiento</label>
+                                <InputText class="form-control" @bind-Value="modelo.Nombre" @bind-Value:after="Revalidar" placeholder="Ej: Comedor Doña Carmen" />
+                                <ValidationMessage For="() => modelo.Nombre" class="text-danger small" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold small text-dark">Categoría Gastronómica</label>
+                                <InputSelect class="form-select" @bind-Value="modelo.Categoria" @bind-Value:after="Revalidar">
+                                    <option value="@CategoriaLocalModel.Almuerzos">Almuerzos</option>
+                                    <option value="@CategoriaLocalModel.ComidaRapida">Comida Rápida</option>
+                                    <option value="@CategoriaLocalModel.Cafeteria">Cafetería</option>
+                                    <option value="@CategoriaLocalModel.Pizzeria">Pizzería</option>
+                                    <option value="@CategoriaLocalModel.Panaderia">Panadería</option>
+                                    <option value="@CategoriaLocalModel.Asadero">Asadero</option>
+                                    <option value="@CategoriaLocalModel.VegetarianoVegano">Vegetariano / Vegano</option>
+                                    <option value="@CategoriaLocalModel.Otro">Otro</option>
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-dark">Descripción o Especialidad</label>
+                                <InputTextArea class="form-control" rows="2" @bind-Value="modelo.Descripcion" @bind-Value:after="Revalidar" placeholder="Ej: Almuerzos ejecutivos completos con sopa, segundo, jugo y postre. Menú económico para universitarios." />
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-3 mt-4 text-dark pb-2 border-bottom">Ubicación y Mapa</h5>
+                        <div class="row g-3 mb-3">
+                            <div class="col-12">
+                                
+                                <button type="button" class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm mb-3" @onclick="AbrirModalMapa" disabled="@cargandoGps">
+                                    @if (cargandoGps)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-map-fill me-2"></i>
+                                    }
+                                    Seleccionar ubicación en el Mapa
+                                </button>
+                                
+                                <InputNumber @bind-Value="modelo.Latitud" hidden />
+                                <InputNumber @bind-Value="modelo.Longitud" hidden />
+                                <ValidationMessage For="() => modelo.Latitud" class="text-danger small" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-dark">Dirección Específica *</label>
+                                <InputText class="form-control" @bind-Value="modelo.Direccion" @bind-Value:after="Revalidar" placeholder="Ej: Av. Los Chasquis (Se autocompleta con el mapa)" />
+                                <ValidationMessage For="() => modelo.Direccion" class="text-danger small" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-dark">Referencia Universitaria (Opcional)</label>
+                                <InputText class="form-control" @bind-Value="modelo.Referencia" @bind-Value:after="Revalidar" placeholder="Ej: Frente a la puerta 3 del Campus Huachi" />
+                            </div>
+                        </div>
+                            
+<h5 class="fw-bold mb-3 mt-4 text-dark pb-2 border-bottom">Contacto y Horarios</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-dark">Teléfono de Contacto</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border"><i class="bi bi-telephone-fill"></i></span>
+                                    <InputText class="form-control" @bind-Value="modelo.TelefonoContacto" @bind-Value:after="Revalidar" placeholder="0991234567" />
+                                </div>
+                                <ValidationMessage For="() => modelo.TelefonoContacto" class="text-danger small mt-1 fw-semibold" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-dark">WhatsApp para Pedidos</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-success border"><i class="bi bi-whatsapp"></i></span>
+                                    <InputText class="form-control" @bind-Value="modelo.WhatsApp" @bind-Value:after="Revalidar" placeholder="0991234567" />
+                                </div>
+                                <ValidationMessage For="() => modelo.WhatsApp" class="text-danger small mt-1 fw-semibold" />
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold small text-dark">Horario de Atención</label>
+                                <InputText class="form-control" @bind-Value="modelo.HorarioApertura" @bind-Value:after="Revalidar" placeholder="Ej: Lun - Vie: 07:30 a 17:00" />
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-3 mt-4 text-dark pb-2 border-bottom">Documentación y Certificado RUC</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-dark">
+                                    Certificado de RUC / RISE emitido por el SRI <span class="text-danger">*</span> <span class="text-muted fw-normal">(Documento PDF, máx. 5 MB)</span>
+                                </label>
+                                <InputFile OnChange="SubirCertificadoRuc" accept=".pdf" class="form-control" disabled="@subiendoPdf" />
+                                <ValidationMessage For="() => modelo.CertificadoRucUrl" class="text-danger small mt-1 fw-semibold" />
+                                
+                                @if (subiendoPdf)
+                                {
+                                    <div class="mt-2 text-primary small d-flex align-items-center gap-2">
+                                        <span class="spinner-border spinner-border-sm"></span> Subiendo documento PDF...
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(modelo.CertificadoRucUrl))
+                                {
+                                    <div class="mt-2 p-2 bg-light rounded border d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
+                                            <span class="small fw-semibold text-dark">Certificado RUC adjunto correctamente</span>
+                                        </div>
+                                        <a href="@ObtenerUrlArchivo(modelo.CertificadoRucUrl)" target="_blank" class="btn btn-outline-danger btn-sm py-1 px-3">
+                                            <i class="bi bi-eye-fill me-1"></i> Ver PDF
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end pt-2">
+                            <button type="submit" class="btn btn-primary px-4 py-2 fw-bold shadow-sm" disabled="@(guardando || subiendoPdf || (editContext != null && !editContext.Validate()))">
+                                @if (guardando)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1 text-white"></span>
+                                    <span class="text-white">Guardando...</span>
+                                }
+                                else
+                                {
+                                    <span class="text-white">@(esEdicion ? "Guardar Cambios" : "Registrar y Enviar a Revisión")</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<!-- Modal de Mapa -->
+@if (mostrarModalMapa)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header bg-primary text-white rounded-top-4">
+                    <h5 class="modal-title fw-bold text-white">
+                        <i class="bi bi-map-fill text-white me-2"></i>Selecciona la Ubicación
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalMapa"></button>
+                </div>
+                <div class="modal-body p-0" style="height: 400px; position: relative;">
+                    <div id="map" style="width: 100%; height: 100%;"></div>
+                    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3" style="z-index: 1000;">
+                        <div class="bg-white px-3 py-2 rounded-pill shadow-sm fw-bold small border text-dark">
+                            <i class="bi bi-arrows-move me-1 text-primary"></i> Arrastra el marcador azul hasta tu local
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0 rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary px-4 fw-bold" @onclick="CerrarModalMapa">Cancelar</button>
+                    <button type="button" class="btn btn-primary px-4 fw-bold" @onclick="ConfirmarUbicacion">
+                        Confirmar Ubicación
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool cargandoGps = false;
+    private bool mostrarModalMapa = false;
+    private DotNetObjectReference<GestionLocal>? objRef;
+    private double tempLat = 0;
+    private double tempLng = 0;
+    private string tempAddress = "";
+
+    protected override void OnInitialized()
+    {
+        objRef = DotNetObjectReference.Create(this);
+    }
+
+    public void Dispose()
+    {
+        objRef?.Dispose();
+    }
+
+    private async Task AbrirModalMapa()
+    {
+        cargandoGps = true;
+        StateHasChanged();
+        
+        double lat = modelo.Latitud != 0 ? modelo.Latitud : -1.2491; // Default to Ambato approx
+        double lng = modelo.Longitud != 0 ? modelo.Longitud : -78.6253;
+
+        try
+        {
+            if (modelo.Latitud == 0 && modelo.Longitud == 0)
+            {
+                var coords = await JS.InvokeAsync<Coordinates>("getGeolocation");
+                lat = coords.Latitud;
+                lng = coords.Longitud;
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.ShowError("No se pudo obtener tu ubicación automática. Arrastra el pin en el mapa.");
+        }
+
+        cargandoGps = false;
+        tempLat = lat;
+        tempLng = lng;
+        tempAddress = modelo.Direccion ?? "";
+        mostrarModalMapa = true;
+        StateHasChanged();
+
+        await Task.Delay(100);
+        await JS.InvokeVoidAsync("initializeMap", lat, lng, objRef);
+    }
+
+    private void CerrarModalMapa()
+    {
+        mostrarModalMapa = false;
+    }
+
+    [JSInvokable]
+    public void UpdateLocationFromMap(double lat, double lng, string address)
+    {
+        tempLat = lat;
+        tempLng = lng;
+        if (!string.IsNullOrWhiteSpace(address))
+        {
+            tempAddress = address;
+        }
+        StateHasChanged();
+    }
+
+    private void ConfirmarUbicacion()
+    {
+        modelo.Latitud = tempLat;
+        modelo.Longitud = tempLng;
+        
+        if (!string.IsNullOrWhiteSpace(tempAddress))
+        {
+            modelo.Direccion = tempAddress;
+        }
+
+        var huachi = (-1.2683, -78.6253);
+        var ingahurco = (-1.2491, -78.6225);
+        var querochaca = (-1.3323, -78.6189);
+
+        var distHuachi = Math.Pow(tempLat - huachi.Item1, 2) + Math.Pow(tempLng - huachi.Item2, 2);
+        var distIngahurco = Math.Pow(tempLat - ingahurco.Item1, 2) + Math.Pow(tempLng - ingahurco.Item2, 2);
+        var distQuerochaca = Math.Pow(tempLat - querochaca.Item1, 2) + Math.Pow(tempLng - querochaca.Item2, 2);
+
+        if (distHuachi <= distIngahurco && distHuachi <= distQuerochaca)
+            modelo.CampusCercano = CampusUTAModel.Huachi;
+        else if (distIngahurco <= distHuachi && distIngahurco <= distQuerochaca)
+            modelo.CampusCercano = CampusUTAModel.Ingahurco;
+        else
+            modelo.CampusCercano = CampusUTAModel.Querochaca;
+
+        mostrarModalMapa = false;
+        Revalidar();
+    }
+
+    private bool cargando = true;
+    private bool guardando = false;
+    private bool subiendoPdf = false;
+    private bool subiendoPortada = false;
+
+    private CreateOrUpdateLocalModel modelo = new();
+    private bool esEdicion = false;
+    private EditContext? editContext;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        var locales = await LocalService.GetMisLocalesAsync();
+        var local = locales.FirstOrDefault();
+
+        if (local != null)
+        {
+            esEdicion = true;
+            modelo = new CreateOrUpdateLocalModel
+            {
+                Id = local.Id,
+                Nombre = local.Nombre,
+                Descripcion = local.Descripcion,
+                Direccion = local.Direccion,
+                Referencia = local.Referencia,
+                CampusCercano = local.CampusCercano,
+                Categoria = local.Categoria,
+                Latitud = local.Latitud,
+                Longitud = local.Longitud,
+                TelefonoContacto = local.TelefonoContacto,
+                WhatsApp = local.WhatsApp,
+                HorarioApertura = local.HorarioApertura,
+                LogoUrl = local.LogoUrl,
+                PortadaUrl = local.PortadaUrl,
+                EstaAbierto = local.EstaAbierto,
+                PropietarioId = local.PropietarioId,
+                CertificadoRucUrl = local.CertificadoRucUrl,
+                EstadoAprobacion = local.EstadoAprobacion,
+                MotivoRechazo = local.MotivoRechazo
+            };
+        }
+        else
+        {
+            var user = await AuthService.GetCurrentUserAsync();
+            if (user != null && Guid.TryParse(user.Id, out var uid))
+            {
+                modelo.PropietarioId = uid;
+            }
+        }
+
+        editContext = new EditContext(modelo);
+        editContext.OnFieldChanged += (s, e) => StateHasChanged();
+
+        cargando = false;
+    }
+
+    private void Revalidar()
+    {
+        if (editContext != null)
+        {
+            editContext.Validate();
+        }
+    }
+
+    private string ObtenerUrlArchivo(string rutaRelativa)
+    {
+        if (string.IsNullOrWhiteSpace(rutaRelativa)) return "#";
+        if (rutaRelativa.StartsWith("http://") || rutaRelativa.StartsWith("https://")) return rutaRelativa;
+        var baseUrl = Configuration["ApiBaseUrl"] ?? "http://localhost:5050/";
+        return $"{baseUrl.TrimEnd('/')}/{rutaRelativa.TrimStart('/')}";
+    }
+
+        private async Task SubirFotoPortada(InputFileChangeEventArgs e)
+    {
+        var archivo = e.File;
+        if (archivo == null) return;
+
+        if (archivo.Size > 5 * 1024 * 1024)
+        {
+            NotificationService.ShowError("La imagen no debe exceder los 5 MB.");
+            return;
+        }
+
+        subiendoPortada = true;
+        StateHasChanged();
+
+        try
+        {
+            using var stream = archivo.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            var (exito, url, msg) = await LocalService.SubirImagenAsync(stream, archivo.Name);
+
+            if (exito && !string.IsNullOrEmpty(url))
+            {
+                modelo.PortadaUrl = url;
+                Revalidar();
+                NotificationService.ShowSuccess("Foto subida correctamente.");
+            }
+            else
+            {
+                NotificationService.ShowError(msg ?? "Ocurrió un error al subir la foto.");
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.ShowError("Error al subir la foto: " + ex.Message);
+        }
+        finally
+        {
+            subiendoPortada = false;
+            StateHasChanged();
+        }
+    }
+
+private async Task SubirCertificadoRuc(InputFileChangeEventArgs e)
+    {
+        var archivo = e.File;
+        if (archivo == null) return;
+
+        if (!archivo.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            NotificationService.ShowError("Por favor, sube únicamente archivos en formato PDF.");
+            return;
+        }
+
+        if (archivo.Size > 5 * 1024 * 1024)
+        {
+            NotificationService.ShowError("El archivo PDF no debe exceder los 5 MB.");
+            return;
+        }
+
+        subiendoPdf = true;
+
+        try
+        {
+            using var stream = archivo.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            var (exito, url, msg) = await LocalService.SubirRucAsync(stream, archivo.Name);
+
+            if (exito && !string.IsNullOrEmpty(url))
+            {
+                modelo.CertificadoRucUrl = url;
+                Revalidar();
+                NotificationService.ShowSuccess("Certificado RUC subido exitosamente. Guarda los cambios para enviar tu solicitud.");
+            }
+            else
+            {
+                NotificationService.ShowError(msg ?? "Error al subir el certificado PDF.");
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.ShowError($"Error al procesar el archivo: {ex.Message}");
+        }
+        finally
+        {
+            subiendoPdf = false;
+        }
+    }
+
+    private async Task CapturarCoordenadasGps()
+    {
+        try
+        {
+            var coords = await JSRuntime.InvokeAsync<Coordinates>("getGeolocation");
+            modelo.Latitud = coords.Latitud;
+            modelo.Longitud = coords.Longitud;
+
+            var huachi = (-1.2694, -78.6255);
+            var ingahurco = (-1.2461, -78.6277);
+            var querochaca = (-1.3533, -78.6186);
+
+            var distHuachi = Math.Pow(coords.Latitud - huachi.Item1, 2) + Math.Pow(coords.Longitud - huachi.Item2, 2);
+            var distIngahurco = Math.Pow(coords.Latitud - ingahurco.Item1, 2) + Math.Pow(coords.Longitud - ingahurco.Item2, 2);
+            var distQuerochaca = Math.Pow(coords.Latitud - querochaca.Item1, 2) + Math.Pow(coords.Longitud - querochaca.Item2, 2);
+
+            if (distHuachi <= distIngahurco && distHuachi <= distQuerochaca)
+                modelo.CampusCercano = CampusUTAModel.Huachi;
+            else if (distIngahurco <= distHuachi && distIngahurco <= distQuerochaca)
+                modelo.CampusCercano = CampusUTAModel.Ingahurco;
+            else
+                modelo.CampusCercano = CampusUTAModel.Querochaca;
+
+            NotificationService.ShowSuccess("Ubicación GPS capturada correctamente.");
+            Revalidar();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"No se pudo obtener la ubicación: {ex.Message}");
+            NotificationService.ShowError("No pudimos acceder a tu GPS. Asegúrate de darle permisos al navegador.");
+        }
+    }
+
+    private async Task GuardarLocal()
+    {
+        if (editContext == null || !editContext.Validate())
+        {
+            NotificationService.ShowError("Revisa los errores en el formulario antes de guardar.");
+            return;
+        }
+
+        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", "¿Estás seguro de que deseas guardar los cambios en tu local?");
+        if (!confirmed) return;
+
+        guardando = true;
+
+        if (esEdicion)
+        {
+            var (exito, _, msg) = await LocalService.UpdateAsync(modelo);
+            if (exito)
+            {
+                NotificationService.ShowSuccess("Los datos de tu local se actualizaron con éxito.");
+            }
+            else
+            {
+                NotificationService.ShowError(msg ?? "Error al actualizar los datos.");
+            }
+        }
+        else
+        {
+            var (exito, creado, msg) = await LocalService.CreateAsync(modelo);
+            if (exito && creado != null)
+            {
+                esEdicion = true;
+                modelo.Id = creado.Id;
+                modelo.EstadoAprobacion = creado.EstadoAprobacion;
+                NotificationService.ShowSuccess("¡¡Tu local ha sido registrado exitosamente! Está en revisión por un administrador.");
+            }
+            else
+            {
+                NotificationService.ShowError(msg ?? "Error al registrar el local.");
+            }
+        }
+
+        guardando = false;
+    }
+
+    public class Coordinates
+    {
+        public double Latitud { get; set; }
+        public double Longitud { get; set; }
+    }
+}

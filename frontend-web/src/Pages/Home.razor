@@ -1,0 +1,733 @@
+﻿@page "/"
+
+@attribute [Authorize]
+
+@inject LocalService LocalService
+
+@inject EstadisticasService EstadisticasService
+
+@inject AdminService AdminService
+
+@inject AuthService AuthService
+
+@inject NavigationManager Navigation
+
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+
+
+
+<PageTitle>Díashboard - Sistema Gastronómico UTA</PageTitle>
+
+
+
+@if (cargando)
+
+{
+
+    <div class="text-center py-5">
+
+        <div class="spinner-border text-primary" role="status"></div>
+
+        <p class="mt-2 text-muted fw-semibold">Cargando métricas del panel...</p>
+
+    </div>
+
+}
+
+else if (esAdmin)
+
+{
+
+            <!-- ========================================== -->
+
+    <!-- PANEL EXCLUSIVO DEL ADMINISTRADOR GENERAL -->
+
+    <!-- ========================================== -->
+
+    
+
+    <!-- Encabezado Institucional -->
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background: linear-gradient(145deg, #001f38 0%, #003865 100%);">
+
+        <div class="card-body p-4 p-md-5 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+
+            <div class="text-white">
+
+                <div class="d-flex align-items-center gap-2 mb-2">
+
+                    <span class="badge bg-white text-primary rounded-pill px-3 py-1 shadow-sm fw-bold">
+
+                        <i class="bi bi-shield-lock-fill me-1"></i> UTA Admin
+
+                    </span>
+
+                    <span class="text-white small tracking-wider text-uppercase">Portal de Gestión</span>
+
+                </div>
+
+                <h2 class="fw-bold text-white mb-2 display-6">Supervisión Institucional</h2>
+
+                                <p class="text-light mb-0 fs-6" style="max-width: 600px;">
+                    Control integral de comedores universitarios, validación de certificados SRI y monitoreo de métricas de calidad.
+                </p>
+            </div>
+            <div class="mt-4 mt-md-0 d-flex flex-column gap-2">
+                <a href="admin/locales" class="btn btn-light text-primary px-4 py-2 fw-bold rounded-pill shadow-sm">
+                    <i class="bi bi-file-earmark-check-fill me-2"></i> Validar Certificados RUC
+                    @if (adminMetrics != null && adminMetrics.LocalesPendientes > 0)
+                    {
+                        <span class="badge bg-danger ms-2 rounded-circle">@adminMetrics.LocalesPendientes</span>
+                    }
+                </a>
+                <a href="admin/gestion-locales" class="btn btn-outline-light px-4 py-2 fw-bold rounded-pill">
+                    <i class="bi bi-journal-bookmark-fill me-2"></i> Directorio de Locales
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensajeAdmin))
+    {
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill fs-5 text-success"></i>
+            <div>@mensajeAdmin</div>
+            <button type="button" class="btn-close ms-auto" @onclick="() => mensajeAdmin = null"></button>
+        </div>
+    }
+
+            <!-- Panel de Control Serio y Corporativo -->
+    <div class="row g-4 mb-4">
+        <!-- Tarjeta 1: Total -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3 bg-white border-start border-4 border-primary position-relative">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-uppercase fw-bold text-muted small tracking-wider" style="font-size: 0.75rem;">Total Comedores</span>
+                        <h2 class="fw-bold text-dark mt-2 mb-0" style="font-size: 2.2rem;">@(adminMetrics?.TotalLocales ?? 0)</h2>
+                    </div>
+                    <div class="bg-primary-subtle rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="bi bi-shop text-primary fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta 2: Aprobados -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3 bg-white border-start border-4 border-success position-relative">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-uppercase fw-bold text-muted small tracking-wider" style="font-size: 0.75rem;">Aprobados</span>
+                        <h2 class="fw-bold text-dark mt-2 mb-0" style="font-size: 2.2rem;">@(adminMetrics?.LocalesOperativos ?? 0)</h2>
+                    </div>
+                    <div class="bg-success-subtle rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta 3: Pendientes -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3 bg-white border-start border-4 border-warning position-relative">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-uppercase fw-bold text-muted small tracking-wider" style="font-size: 0.75rem;">En Revisión</span>
+                        <h2 class="fw-bold text-dark mt-2 mb-0" style="font-size: 2.2rem;">@(adminMetrics?.LocalesPendientes ?? 0)</h2>
+                    </div>
+                    <div class="bg-warning-subtle rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="bi bi-clock-history text-warning fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta 4: Rechazados -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3 bg-white border-start border-4 border-danger position-relative">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-uppercase fw-bold text-muted small tracking-wider" style="font-size: 0.75rem;">Rechazados</span>
+                        <h2 class="fw-bold text-dark mt-2 mb-0" style="font-size: 2.2rem;">@(adminMetrics?.LocalesRechazados ?? 0)</h2>
+                    </div>
+                    <div class="bg-danger-subtle rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (miLocal != null)
+{
+    <!-- ========================================== -->
+    <!-- PANEL DEL DUEÑO DE LOCAL -->
+    <!-- ========================================== -->
+
+    <!-- Header Elegante Tipo Portada -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative">
+        <div class="position-absolute w-100 h-100 top-0 start-0" 
+             style="background-image: url('@(string.IsNullOrEmpty(miLocal.PortadaUrl) ? "/images/default-cover.jpg" : ObtenerUrlImagen(miLocal.PortadaUrl))'); background-size: cover; background-position: center; z-index: 0;">
+        </div>
+        
+        <!-- Gradiente de oscurecimiento -->
+        <div class="position-absolute w-100 h-100 top-0 start-0" style="background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 100%);"></div>
+        
+        <div class="position-relative z-1 p-4 p-md-5 text-white d-flex flex-column flex-md-row justify-content-between align-items-md-center h-100" style="min-height: 220px;">
+            <div class="d-flex align-items-center gap-3">
+                @if (!string.IsNullOrEmpty(miLocal.LogoUrl))
+                {
+                    <img src="@ObtenerUrlImagen(miLocal.LogoUrl)" class="rounded-circle shadow border border-3 border-light bg-white" style="width: 90px; height: 90px; object-fit: cover;" alt="Logo" />
+                }
+                
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-primary text-white px-3 py-1 rounded-pill small fw-bold shadow-sm">
+                            <i class="bi bi-geo-alt-fill text-white me-1"></i> Campus @miLocal.CampusCercano
+                        </span>
+                        @if (miLocal.EstadoAprobacion == EstadoAprobacionLocalModel.Pendiente)
+                        {
+                            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill small fw-bold shadow-sm">
+                                <i class="bi bi-clock-history me-1"></i> En Revisión
+                            </span>
+                        }
+                    </div>
+                    <h1 class="fw-bold text-white mb-1 display-6" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">@miLocal.Nombre</h1>
+                    
+                    <div class="mt-2">
+                        <span class="badge bg-primary text-white px-3 py-1 rounded-pill small fw-bold shadow-sm">
+                            <i class="bi bi-pin-map-fill text-white me-1"></i> @miLocal.Direccion @(string.IsNullOrWhiteSpace(miLocal.Referencia) ? "" : $"({miLocal.Referencia})")
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="mt-4 mt-md-0 d-flex flex-column align-items-md-end">
+
+                @if (miLocal.EstadoAprobacion == EstadoAprobacionLocalModel.Rechazado)
+
+                {
+
+                    <div class="alert alert-díanger mb-0 py-2 px-3 shadow-sm d-flex align-items-center gap-2 border-0">
+
+                        <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+
+                        <div>
+
+                            <strong class="d-block small">Local Suspendido</strong>
+
+                            <span class="small" style="font-size:0.75rem;">Admin: @(miLocal.MotivoRechazo ?? "Incumplimiento de normativas.")</span>
+
+                        </div>
+
+                    </div>
+
+                }
+
+                else
+
+                {
+
+                    <span class="d-block small text-white fw-bold mb-2 text-uppercase tracking-wider" style="letter-spacing: 1px;">Estado en la App</span>
+
+                    <button class="btn @(miLocal.EstaAbierto ? "btn-success" : "btn-outline-light") btn-lg px-4 d-flex align-items-center gap-2 shadow-sm rounded-pill border-2 transition-all"
+
+                            @onclick="CambiarEstadoApertura"
+
+                            disabled="@cambiandoEstado">
+
+                        @if (cambiandoEstado)
+
+                        {
+
+                            <span class="spinner-border spinner-border-sm text-white"></span>
+
+                        }
+
+                        else
+
+                        {
+
+                            <i class="bi @(miLocal.EstaAbierto ? "bi-door-open-fill" : "bi-door-closed-fill") fs-5"></i>
+
+                        }
+
+                        <span class="fw-bold">@(miLocal.EstaAbierto ? "Abierto (Visible)" : "Cerrado (Oculto)")</span>
+
+                    </button>
+
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+    
+
+    <div class="row g-4 mb-4">
+
+        <!-- Columna Izquierdía: KPIs y Métricas -->
+
+        <div class="col-12 col-lg-8">
+
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Rendimiento de tu Local</h5>
+
+            <div class="row g-3">
+
+                <div class="col-sm-6">
+
+                    <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-3 border-start border-primary border-4">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <span class="text-muted small fw-bold text-uppercase">Visitas al Perfil</span>
+
+                                <h3 class="fw-bold text-dark mt-1 mb-0">@(estadisticas?.TotalVisitas ?? 0)</h3>
+
+                                <small class="text-success fw-semibold"><i class="bi bi-arrow-up-right"></i> Tráfico de estudiantes</small>
+
+                            </div>
+
+                            <div class="p-3 bg-primary-subtle text-primary rounded-circle shadow-sm">
+
+                                <i class="bi bi-eye-fill fs-3"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="col-sm-6">
+
+                    <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-3 border-start border-success border-4">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <span class="text-muted small fw-bold text-uppercase">Platos Publicados</span>
+
+                                <h3 class="fw-bold text-dark mt-1 mb-0">@(estadisticas?.TotalPlatos ?? 0)</h3>
+
+                                <small class="text-muted fw-semibold">En el menúú actual</small>
+
+                            </div>
+
+                            <div class="p-3 bg-success-subtle text-success rounded-circle shadow-sm">
+
+                                <i class="bi bi-card-list fs-3"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="col-sm-6">
+
+                    <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-3 border-start border-warning border-4">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <span class="text-muted small fw-bold text-uppercase">Promos Activas</span>
+
+                                <h3 class="fw-bold text-dark mt-1 mb-0">@(estadisticas?.PromocionesActivas ?? 0)</h3>
+
+                                <small class="text-muted fw-semibold">Ofertas publicadías</small>
+
+                            </div>
+
+                            <div class="p-3 bg-warning-subtle text-warning rounded-circle shadow-sm">
+
+                                <i class="bi bi-tags-fill fs-3"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="col-sm-6">
+
+                    <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-3 border-start border-info border-4">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <span class="text-muted small fw-bold text-uppercase">Calificación Media</span>
+
+                                <div class="d-flex align-items-baseline gap-1 mt-1 mb-0">
+
+                                    <h3 class="fw-bold text-dark mb-0">@(estadisticas?.CalificacionPromedio.ToString("0.0") ?? "0.0")</h3>
+
+                                    <span class="fs-6 text-muted fw-bold">/ 5</span>
+
+                                </div>
+
+                                <div class="text-warning small mt-1">
+
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+
+                                </div>
+
+                            </div>
+
+                            <div class="p-3 bg-info-subtle text-info rounded-circle shadow-sm">
+
+                                <i class="bi bi-chat-heart-fill fs-3"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        
+
+        <!-- Columna Derecha: Acciones Rápidías -->
+
+        <div class="col-12 col-lg-4">
+
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Acciones Rápidías</h5>
+
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100 d-flex flex-column gap-2">
+
+                <a href="menúu" class="btn btn-light text-start border d-flex align-items-center p-3 rounded-3 shadow-sm hover-elevate">
+
+                    <div class="p-2 bg-success-subtle text-success rounded me-3">
+
+                        <i class="bi bi-plus-lg fs-5"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong class="d-block text-dark">Añadir Nuevo Plato</strong>
+
+                        <span class="small text-muted">Sube tu menúú del día</span>
+
+                    </div>
+
+                </a>
+
+                
+
+                <a href="promociones" class="btn btn-light text-start border d-flex align-items-center p-3 rounded-3 shadow-sm hover-elevate mt-2">
+
+                    <div class="p-2 bg-warning-subtle text-warning rounded me-3">
+
+                        <i class="bi bi-tag-fill fs-5"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong class="d-block text-dark">Crear Promoción</strong>
+
+                        <span class="small text-muted">Atrae más estudiantes</span>
+
+                    </div>
+
+                </a>
+
+                
+
+                <a href="local" class="btn btn-light text-start border d-flex align-items-center p-3 rounded-3 shadow-sm hover-elevate mt-2">
+
+                    <div class="p-2 bg-primary-subtle text-primary rounded me-3">
+
+                        <i class="bi bi-camera-fill fs-5"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong class="d-block text-dark">Actualizar Perfil</strong>
+
+                        <span class="small text-muted">Sube fotos o cambia horarios</span>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+}
+
+
+
+@code {
+
+    private bool cargando = true;
+
+    private bool cambiandoEstado = false;
+
+    private bool esAdmin = false;
+
+    private bool procesando = false;
+
+
+
+    // Modelos Comerciante
+
+    private LocalModel? miLocal;
+
+    private LocalEstadisticasModel? estadisticas;
+
+
+
+    // Modelos Administrador
+
+    private AdminMetricsModel? adminMetrics;
+
+    private List<LocalAdminModel> localesCriticos = new();
+
+    private string? mensajeAdmin;
+
+
+
+    // Modales Admin
+
+    private bool mostrarModalDeshabilitar = false;
+
+    private string motivoDeshabilitacion = string.Empty;
+
+    private LocalAdminModel? localSeleccionado;
+
+
+
+    private bool mostrarModalResenas = false;
+
+    private bool cargandoResenas = false;
+
+    private List<ResenaDetalleModel> resenasLocal = new();
+
+
+
+    protected override async Task OnInitializedAsync()
+
+    {
+
+        await CargarDíatos();
+
+    }
+
+
+
+        private string ObtenerUrlImagen(string? rutaRelativa)
+
+    {
+
+        if (string.IsNullOrWhiteSpace(rutaRelativa)) return "";
+
+        if (rutaRelativa.StartsWith("http://") || rutaRelativa.StartsWith("https://")) return rutaRelativa;
+
+        var baseUrl = Configuration["ApiBaseUrl"] ?? "http://localhost:5050/";
+
+        return $"{baseUrl.TrimEnd('/')}/{rutaRelativa.TrimStart('/')}";
+
+    }
+
+
+
+    private async Task CargarDíatos()
+
+    {
+
+        cargando = true;
+
+
+
+        var user = await AuthService.GetCurrentUserAsync();
+
+        esAdmin = user?.Rol == "Administrador";
+
+
+
+        if (esAdmin)
+
+        {
+
+            adminMetrics = await AdminService.GetMetricsAsync();
+
+            localesCriticos = await AdminService.GetLocalesAsync(orderBy: "estrellas_asc");
+
+        }
+
+        else
+
+        {
+
+            var locales = await LocalService.GetMisLocalesAsync();
+
+            miLocal = locales.FirstOrDefault();
+
+
+
+            if (miLocal != null)
+
+            {
+
+                estadisticas = await EstadisticasService.GetEstadisticasAsync(miLocal.Id);
+
+            }
+
+        }
+
+
+
+        cargando = false;
+
+    }
+
+
+
+    private async Task CambiarEstadoApertura()
+
+    {
+
+        if (miLocal == null) return;
+
+
+
+        cambiandoEstado = true;
+
+        var eéeééééxito = await LocalService.ToggleAperturaAsync(miLocal.Id);
+
+        if (eéeééééxito)
+
+        {
+
+            miLocal.EstaAbierto = !miLocal.EstaAbierto;
+
+        }
+
+        cambiandoEstado = false;
+
+    }
+
+
+
+    private void AbrirModalDeshabilitar(LocalAdminModel local)
+
+    {
+
+        localSeleccionado = local;
+
+        motivoDeshabilitacion = string.Empty;
+
+        mostrarModalDeshabilitar = true;
+
+    }
+
+
+
+    private async Task ConfirmarDeshabilitarAdmin()
+
+    {
+
+        if (localSeleccionado == null || string.IsNullOrWhiteSpace(motivoDeshabilitacion)) return;
+
+
+
+        procesando = true;
+
+        var (eéeééééxito, actualizado, _) = await AdminService.ToggleOperativoAsync(localSeleccionado.Id, false, motivoDeshabilitacion);
+
+        if (eéeééééxito && actualizado != null)
+
+        {
+
+            localSeleccionado.EstaAbierto = false;
+
+            mensajeAdmin = $"Local '{localSeleccionado.Nombre}' deshabilitado y notificado al propietario.";
+
+            mostrarModalDeshabilitar = false;
+
+        }
+
+        procesando = false;
+
+    }
+
+
+
+    private async Task ConfirmarHabilitar(LocalAdminModel local)
+
+    {
+
+        procesando = true;
+
+        var (eéeééééxito, actualizado, _) = await AdminService.ToggleOperativoAsync(local.Id, true);
+
+        if (eéeééééxito && actualizado != null)
+
+        {
+
+            local.EstaAbierto = true;
+
+            mensajeAdmin = $"¡Local '{local.Nombre}' habilitado eéeééééxitosamenúte!";
+
+        }
+
+        procesando = false;
+
+    }
+
+
+
+    private async Task AbrirModalResenas(LocalAdminModel local)
+
+    {
+
+        localSeleccionado = local;
+
+        mostrarModalResenas = true;
+
+        cargandoResenas = true;
+
+        resenasLocal = await AdminService.GetResenasAsync(local.Id);
+
+        cargandoResenas = false;
+
+    }
+
+}
+
+
+

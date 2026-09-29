@@ -1,0 +1,2344 @@
+﻿@page "/menu"
+
+
+
+@attribute [Authorize]
+
+
+
+@inject LocalService LocalService
+
+
+
+@inject MenuService MenuService
+
+
+
+@inject PromocionService PromocionService
+
+
+
+@inject NavigationManager Navigation
+
+
+
+@inject IJSRuntime JS
+
+
+
+@inject NotificationService NotificationService
+
+
+
+
+
+
+
+<PageTitle>Menúú y Productos - Sistema Gastronómico UTA</PageTitle>
+
+
+
+
+
+
+
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4 pb-3 border-bottom">
+
+
+
+    <div>
+
+
+
+        <h2 class="fw-bold mb-1 text-dark">Menú y Productos</h2>
+
+
+
+        <p class="text-muted small mb-0">Gestión de catálogo, precios y disponibilidíad en tiempo real</p>
+
+
+
+    </div>
+
+
+
+
+
+
+
+    @if (localActual != null)
+
+
+
+    {
+
+
+
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 rounded-3 shadow-sm fw-semibold" @onclick="AbrirModalCrear">
+
+
+
+            <i class="bi bi-plus-lg text-white"></i>
+
+
+
+            <span class="text-white">Nuevo Producto</span>
+
+
+
+        </button>
+
+
+
+    }
+
+
+
+</div>
+
+
+
+
+
+
+
+@if (cargando)
+
+
+
+{
+
+
+
+    <div class="text-center py-5">
+
+
+
+        <div class="spinner-border text-primary" role="status"></div>
+
+
+
+        <p class="mt-2 text-muted fw-semibold">Cargando menúúú...</p>
+
+
+
+    </div>
+
+
+
+}
+
+
+
+else if (localActual == null)
+
+
+
+{
+
+
+
+    <div class="card border shadow-sm rounded-4 p-5 text-center bg-white my-4">
+
+
+
+        <div class="d-inline-flex p-3 rounded-circle bg-primary-subtle text-primary mx-auto mb-3">
+
+
+
+            <i class="bi bi-shop fs-2 text-primary"></i>
+
+
+
+        </div>
+
+
+
+        <h5 class="fw-bold text-dark mb-1">Registra tu local para gestionar el menúúú</h5>
+
+
+
+        <p class="text-muted small mx-auto mb-3" style="max-width: 450px;">
+
+
+
+            Configura primero la información de tu establecimiento antes de publicar platos y ofertas.
+
+
+
+        </p>
+
+
+
+        <div>
+
+
+
+            <a href="local" class="btn btn-primary px-4 py-2 fw-semibold rounded-3 shadow-sm">
+
+
+
+                Ir a Mi Local
+
+
+
+            </a>
+
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+}
+
+
+
+else
+
+
+
+{
+
+
+
+    <!-- Barra de Búsquedía y Filtros Estructurados -->
+
+
+
+    <div class="card border shadow-sm rounded-4 p-3 bg-white mb-4">
+
+
+
+        <div class="row g-2 align-items-center">
+
+
+
+            <div class="col-md-4 col-lg-3">
+
+
+
+                <div class="input-group">
+
+
+
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+
+
+
+                    <input type="text" class="form-control border-start-0 ps-0 text-dark" 
+
+
+
+                           placeholder="Buscar por nombre..." 
+
+
+
+                           @bind="busquedaTexto" @bind:event="oninput" />
+
+
+
+                    @if (!string.IsNullOrEmpty(busquedaTexto))
+
+
+
+                    {
+
+
+
+                        <button class="btn btn-outline-secondary border-start-0 border" @onclick="() => busquedaTexto = string.Empty">
+
+
+
+                            <i class="bi bi-x-lg"></i>
+
+
+
+                        </button>
+
+
+
+                    }
+
+
+
+                </div>
+
+
+
+            </div>
+
+
+
+            <div class="col-md-8 col-lg-9">
+
+
+
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+
+
+
+                    <button class="filter-tab-pill @(filtroCategoria == null ? "active-primary" : "")"
+
+
+
+                            @onclick="() => FiltrarPorCategoria(null)">
+
+
+
+                        Todos (@platos.Count)
+
+
+
+                    </button>
+
+
+
+                    <button class="filter-tab-pill @(filtroCategoria == CategoriaPlatoModel.Almuerzo ? "active-primary" : "")"
+
+
+
+                            @onclick="() => FiltrarPorCategoria(CategoriaPlatoModel.Almuerzo)">
+
+
+
+                        Almuerzos (@platos.Count(p => p.Categoria == CategoriaPlatoModel.Almuerzo))
+
+
+
+                    </button>
+
+
+
+                    <button class="filter-tab-pill @(filtroCategoria == CategoriaPlatoModel.Desayuno ? "active-primary" : "")"
+
+
+
+                            @onclick="() => FiltrarPorCategoria(CategoriaPlatoModel.Desayuno)">
+
+
+
+                        Desayunos (@platos.Count(p => p.Categoria == CategoriaPlatoModel.Desayuno))
+
+
+
+                    </button>
+
+
+
+                    <button class="filter-tab-pill @(filtroCategoria == CategoriaPlatoModel.ComidaRapida ? "active-primary" : "")"
+
+
+
+                            @onclick="() => FiltrarPorCategoria(CategoriaPlatoModel.ComidaRapida)">
+
+
+
+                        Comidía Rápidía (@platos.Count(p => p.Categoria == CategoriaPlatoModel.ComidaRapida))
+
+
+
+                    </button>
+
+
+
+                    <button class="filter-tab-pill @(filtroCategoria == CategoriaPlatoModel.Combo ? "active-primary" : "")"
+
+
+
+                            @onclick="() => FiltrarPorCategoria(CategoriaPlatoModel.Combo)">
+
+
+
+                        Combos (@platos.Count(p => p.Categoria == CategoriaPlatoModel.Combo))
+
+
+
+                    </button>
+
+
+
+                    <button class="filter-tab-pill @(filtroCategoria == CategoriaPlatoModel.Bebida ? "active-primary" : "")"
+
+
+
+                            @onclick="() => FiltrarPorCategoria(CategoriaPlatoModel.Bebida)">
+
+
+
+                        Bebidas (@platos.Count(p => p.Categoria == CategoriaPlatoModel.Bebida))
+
+
+
+                    </button>
+
+
+
+                    <button class="filter-tab-pill @(filtroCategoria == CategoriaPlatoModel.PlatoCarta ? "active-primary" : "")"
+
+
+
+                            @onclick="() => FiltrarPorCategoria(CategoriaPlatoModel.PlatoCarta)">
+
+
+
+                        A la Carta (@platos.Count(p => p.Categoria == CategoriaPlatoModel.PlatoCarta))
+
+
+
+                    </button>
+
+
+
+                </div>
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+
+
+
+    @if (platosFiltrados.Count == 0)
+
+
+
+    {
+
+
+
+        <div class="card border shadow-sm text-center p-5 rounded-4 bg-white">
+
+
+
+            <div class="d-inline-flex p-3 rounded-circle mx-auto mb-3 bg-primary-subtle text-primary">
+
+
+
+                <i class="bi bi-inbox fs-2 text-primary"></i>
+
+
+
+            </div>
+
+
+
+            <h5 class="fw-bold text-dark mb-1">No se encontraron productos</h5>
+
+
+
+            <p class="text-muted small mx-auto mb-3" style="max-width: 400px;">
+
+
+
+                @(string.IsNullOrWhiteSpace(busquedaTexto) ? "No hay productos registrados en esta categoría." : $"No hay resultados para '{busquedaTexto}'.")
+
+
+
+            </p>
+
+
+
+            <div>
+
+
+
+                <button class="btn btn-outline-primary btn-sm px-3 fw-semibold rounded-3" @onclick="AbrirModalCrear">
+
+
+
+                    <i class="bi bi-plus-lg me-1"></i> Agregar Producto
+
+
+
+                </button>
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+    }
+
+
+
+    else
+
+
+
+    {
+
+
+
+        <!-- Grid de Tarjetas Limpias y Confiables -->
+
+
+
+        <div class="row g-3">
+
+
+
+            <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items="@platosFiltrados" Context="plato" OverscanCount="4">
+
+
+
+                                  <div class="col-md-6 col-xl-4" @key="plato.Id">
+
+
+
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative @(!plato.EstaDisponible ? "opacity-75" : "")">
+
+
+
+                        
+
+
+
+                        @if (!plato.EstaDisponible)
+
+
+
+                        {
+
+
+
+                            <div class="position-absolute top-0 end-0 m-3 z-3">
+
+
+
+                                <span class="badge bg-secondary rounded-pill px-3 shadow-sm">Agotado</span>
+
+
+
+                            </div>
+
+
+
+                        }
+
+
+
+                        else if (plato.EsPlatoDelDia)
+
+
+
+                        {
+
+
+
+                            <div class="position-absolute top-0 end-0 m-3 z-3">
+
+
+
+                                <span class="badge bg-warning text-dark rounded-pill px-3 shadow-sm"><i class="bi bi-star-fill me-1"></i> Plato del Día</span>
+
+
+
+                            </div>
+
+
+
+                        }
+
+
+
+
+
+
+
+                        @{
+
+
+
+                            var promo = promociones.FirstOrDefault(p => p.PlatoId == plato.Id && p.EstaActiva);
+
+
+
+                        }
+
+
+
+
+
+
+
+                        <div style="height: 160px; background-color: #f1f5f9; overflow: hidden;" class="position-relative">
+
+
+
+                            <img src="@ObtenerUrlImagen(plato.ImagenUrl)" class="w-100 h-100 object-fit-cover" alt="@plato.Nombre" onerror="this.src='https://placehold.co/400x200/003865/ffffff?text=Plato'" />
+
+
+
+                            <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+
+
+
+                                <div class="d-flex align-items-center gap-2">
+
+
+
+                                    @if (promo != null)
+
+
+
+                                    {
+
+
+
+                                        <span class="badge bg-success text-white rounded-pill px-2 py-1 border border-light border-opacity-25 shadow-sm fw-bold">
+
+
+
+                                            $@promo.PrecioPromocional.ToString("0.00")
+
+
+
+                                        </span>
+
+
+
+                                        <small class="text-white-50 text-decoration-line-through fw-semibold">
+
+
+
+                                            $@plato.Precio.ToString("0.00")
+
+
+
+                                        </small>
+
+
+
+                                    }
+
+
+
+                                    else
+
+
+
+                                    {
+
+
+
+                                        <span class="badge bg-primary text-white rounded-pill px-2 py-1 border border-light border-opacity-25 shadow-sm fw-bold">
+
+
+
+                                            $@plato.Precio.ToString("0.00")
+
+
+
+                                        </span>
+
+
+
+                                    }
+
+
+
+                                </div>
+
+
+
+                            </div>
+
+
+
+                        </div>
+
+
+
+                        
+
+
+
+                        <div class="card-body d-flex flex-column p-4">
+
+
+
+                            <h6 class="fw-bold text-dark mb-1 text-truncate">@plato.Nombre</h6>
+
+
+
+                            <div class="mb-2">
+
+
+
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fw-semibold">
+
+
+
+                                    @plato.Categoria
+
+
+
+                                </span>
+
+
+
+                                @if (promo != null && !string.IsNullOrEmpty(promo.DiasValidos))
+
+
+
+                                {
+
+
+
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle small fw-semibold más-1">
+
+
+
+                                        <i class="bi bi-tag-fill me-1"></i> Oferta: @promo.DiasValidos
+
+
+
+                                    </span>
+
+
+
+                                }
+
+
+
+                                else if (promo != null)
+
+
+
+                                {
+
+
+
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle small fw-semibold más-1">
+
+
+
+                                        <i class="bi bi-tag-fill me-1"></i> Oferta Activa
+
+
+
+                                    </span>
+
+
+
+                                }
+
+
+
+                            </div>
+
+
+
+
+
+
+
+                            <p class="text-muted small mb-3 flex-grow-1">
+
+
+
+                                @plato.Descripcion
+
+
+
+                            </p>
+
+
+
+
+
+
+
+                            <!-- Barra de Acciones Directas -->
+
+
+
+                            <div class="border-top pt-3 d-flex align-items-center justify-content-between gap-2">
+
+
+
+                                <button class="btn btn-sm @(plato.EstaDisponible ? "btn-success" : "btn-secondary") px-3 py-1 rounded-pill fw-semibold shadow-sm"
+
+
+
+                                        @onclick="() => ToggleDisponible(plato)"
+
+
+
+                                        title="Cambiar disponibilidíad en 1 clic">
+
+
+
+                                    <i class="bi @(plato.EstaDisponible ? "bi-check2-circle" : "bi-díash-circle") me-1 text-white"></i>
+
+
+
+                                    <span class="text-white">@(plato.EstaDisponible ? "Disponible" : "Agotado")</span>
+
+
+
+                                </button>
+
+
+
+
+
+
+
+                                <div class="d-flex align-items-center gap-1">
+
+
+
+                                    <button class="btn btn-sm @(plato.EsPlatoDelDia ? "btn-warning text-dark shadow-sm" : "btn-light border text-muted") rounded-circle p-2"
+
+
+
+                                            @onclick="() => TogglePlatoDelDia(plato)"
+
+
+
+                                            style="width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;"
+
+
+
+                                            title="@(plato.EsPlatoDelDia ? "Quitar de Plato del Día" : "Marcar como Plato del Día")">
+
+
+
+                                        <i class="bi @(plato.EsPlatoDelDia ? "bi-star-fill text-dark" : "bi-star text-muted")"></i>
+
+
+
+                                    </button>
+
+
+
+
+
+
+
+                                    <button class="btn btn-light border btn-sm text-dark rounded-circle p-2"
+
+
+
+                                            @onclick="() => AbrirModalEditar(plato)"
+
+
+
+                                            style="width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;"
+
+
+
+                                            title="Editar">
+
+
+
+                                        <i class="bi bi-pencil-fill small text-dark"></i>
+
+
+
+                                    </button>
+
+
+
+
+
+
+
+                                    <button class="btn btn-light border btn-sm text-díanger rounded-circle p-2"
+
+
+
+                                            @onclick="() => EliminarPlato(plato)"
+
+
+
+                                            style="width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;"
+
+
+
+                                            title="Eliminar">
+
+
+
+                                        <i class="bi bi-trash3-fill small text-díanger"></i>
+
+
+
+                                    </button>
+
+
+
+                                </div>
+
+
+
+                            </div>
+
+
+
+                        </div>
+
+
+
+                    </div>
+
+
+
+                </div>
+
+
+
+              </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+
+
+
+        </div>
+
+
+
+    }
+
+
+
+}
+
+
+
+
+
+
+
+<!-- Modal para Crear / Editar Producto (Diseño Blanco, Limpio y Confiable) -->
+
+
+
+@if (mostrarModal)
+
+
+
+{
+
+
+
+    <div class="modal fade show d-block" style="background-color: rgba(15, 23, 42, 0.55);" tabindex="-1">
+
+
+
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 540px;">
+
+
+
+            <div class="modal-content border shadow-lg rounded-4 overflow-hidden bg-white">
+
+
+
+                <!-- Cabecera Blanca sin bloque azul oscuro -->
+
+
+
+                <div class="modal-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+
+
+
+                    <div>
+
+
+
+                        <h5 class="modal-title fw-bold text-dark mb-0">
+
+
+
+                            @(esEdicion ? "Modificar Producto" : "Nuevo Producto")
+
+
+
+                        </h5>
+
+
+
+                        <small class="text-muted">@(esEdicion ? "Actualiza los díatos del plato en el menúúú" : "Ingresa los díatos para registrarlo en tu local")</small>
+
+
+
+                    </div>
+
+
+
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+
+
+
+                </div>
+
+
+
+
+
+
+
+                <EditForm EditContext="editContext" OnValidSubmit="GuardarPlato">
+
+
+
+                    <DataAnnotationsValidator />
+
+
+
+
+
+
+
+                    <div class="modal-body p-4">
+
+
+
+                        <div class="mb-3">
+
+
+
+                            <label class="form-label fw-bold small text-dark">Nombre del Producto</label>
+
+
+
+                            <InputText class="form-control text-dark fw-medium" @bind-Value="modeloFormulario.Nombre" @bind-Value:after="Revalidar" placeholder="Ej: Almuerzo Ejecutivo, Combo Pizza Personal" />
+
+
+
+                            <ValidationMessage For="() => modeloFormulario.Nombre" class="text-díanger small mt-1" />
+
+
+
+                        </div>
+
+
+
+
+
+
+
+                        <div class="row g-3 mb-3">
+
+
+
+                            <div class="col-sm-7">
+
+
+
+                                <label class="form-label fw-bold small text-dark">Categoría</label>
+
+
+
+                                <InputSelect class="form-select text-dark fw-medium" @bind-Value="modeloFormulario.Categoria">
+
+
+
+                                    <option value="@CategoriaPlatoModel.Almuerzo">Almuerzo</option>
+
+
+
+                                    <option value="@CategoriaPlatoModel.Desayuno">Desayuno</option>
+
+
+
+                                    <option value="@CategoriaPlatoModel.PlatoCarta">A la Carta</option>
+
+
+
+                                    <option value="@CategoriaPlatoModel.ComidaRapida">Comidía Rápidía</option>
+
+
+
+                                    <option value="@CategoriaPlatoModel.Combo">Combo</option>
+
+
+
+                                    <option value="@CategoriaPlatoModel.Bebida">Bebida</option>
+
+
+
+                                    <option value="@CategoriaPlatoModel.Snack">Snack</option>
+
+
+
+                                    <option value="@CategoriaPlatoModel.Postre">Postre</option>
+
+
+
+                                    <option value="@CategoriaPlatoModel.Otro">Otro</option>
+
+
+
+                                </InputSelect>
+
+
+
+                            </div>
+
+
+
+
+
+
+
+                            <div class="col-sm-5">
+
+
+
+                                <label class="form-label fw-bold small text-dark">Precio ($ USD)</label>
+
+
+
+                                <div class="input-group">
+
+
+
+                                    <span class="input-group-text bg-light text-dark fw-bold border">$</span>
+
+
+
+                                    <InputNumber class="form-control text-dark fw-bold" @bind-Value="modeloFormulario.Precio" @bind-Value:after="Revalidar" min="0" step="0.05" onkeydown="if(event.key==='-' || event.key==='e') event.preventDefault();" />
+
+
+
+                                </div>
+
+
+
+                                <ValidationMessage For="() => modeloFormulario.Precio" class="text-díanger small mt-1" />
+
+
+
+                            </div>
+
+
+
+                        </div>
+
+
+
+
+
+
+
+                        <div class="mb-3">
+
+
+
+                            <label class="form-label fw-bold small text-dark">Descripción o Componentes <span class="text-muted fw-normal">(opcional)</span></label>
+
+
+
+                            <InputTextArea class="form-control text-dark" rows="2" @bind-Value="modeloFormulario.Descripcion" placeholder="Ej: Incluye sopa del día, arroz con menúúestra y jugo natural" />
+
+
+
+                        </div>
+
+
+
+
+
+
+
+                        <div class="mb-3">
+
+
+
+                            <label class="form-label fw-bold small text-dark">Foto del Producto <span class="text-muted fw-normal">(opcional, máx. 5 MB)</span></label>
+
+
+
+                            <div class="d-flex align-items-center gap-3">
+
+
+
+                                @if (!string.IsNullOrEmpty(modeloFormulario.ImagenUrl))
+
+
+
+                                {
+
+
+
+                                    <img src="@ObtenerUrlImagen(modeloFormulario.ImagenUrl)" alt="Vista previa" class="img-thumbnail rounded-3" style="width: 64px; height: 64px; object-fit: cover;" />
+
+
+
+                                }
+
+
+
+                                <div class="flex-grow-1">
+
+
+
+                                    <InputFile OnChange="SubirImagen" accept="image/png, image/jpeg, image/webp" class="form-control form-control-sm" disabled="@subiendoImagen" />
+
+
+
+                                    @if (subiendoImagen)
+
+
+
+                                    {
+
+
+
+                                        <div class="small text-primary mt-1"><span class="spinner-border spinner-border-sm me-1"></span> Subiendo...</div>
+
+
+
+                                    }
+
+
+
+                                </div>
+
+
+
+                            </div>
+
+
+
+                        </div>
+
+
+
+
+
+
+
+                        <!-- Opciones Rápidías de Estado -->
+
+
+
+                        <div class="row g-2 pt-1">
+
+
+
+                            <div class="col-6">
+
+
+
+                                <div class="border rounded-3 p-3 bg-light h-100 d-flex flex-column justify-content-between">
+
+
+
+                                    <div class="form-check form-switch mb-0">
+
+
+
+                                        <InputCheckbox class="form-check-input" @bind-Value="modeloFormulario.EstaDisponible" id="checkDispModal" />
+
+
+
+                                        <label class="form-check-label fw-bold text-dark small más-1" for="checkDispModal">
+
+
+
+                                            Disponible
+
+
+
+                                        </label>
+
+
+
+                                    </div>
+
+
+
+                                    <small class="text-muted" style="font-size: 0.75rem;">Visible para estudiantes</small>
+
+
+
+                                </div>
+
+
+
+                            </div>
+
+
+
+                            <div class="col-6">
+
+
+
+                                <div class="border rounded-3 p-3 bg-light h-100 d-flex flex-column justify-content-between">
+
+
+
+                                    <div class="form-check form-switch mb-0">
+
+
+
+                                        <InputCheckbox class="form-check-input" @bind-Value="modeloFormulario.EsPlatoDelDia" id="checkPlatoDiaModal" />
+
+
+
+                                        <label class="form-check-label fw-bold text-dark small más-1" for="checkPlatoDiaModal">
+
+
+
+                                            Plato del Día
+
+
+
+                                        </label>
+
+
+
+                                    </div>
+
+
+
+                                    <small class="text-muted" style="font-size: 0.75rem;">Destacado en portadía</small>
+
+
+
+                                </div>
+
+
+
+                            </div>
+
+
+
+                        </div>
+
+
+
+                    </div>
+
+
+
+
+
+
+
+                    <div class="modal-footer bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
+
+
+
+                        <button type="button" class="btn btn-light border px-4 fw-semibold text-dark" @onclick="CerrarModal">
+
+
+
+                            Cancelar
+
+
+
+                        </button>
+
+
+
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm" disabled="@(guardandoPlato || (editContext != null && !editContext.Validate()))">
+
+
+
+                            @if (guardandoPlato)
+
+
+
+                            {
+
+
+
+                                <span class="spinner-border spinner-border-sm me-1 text-white"></span>
+
+
+
+                                <span class="text-white">Guardíando...</span>
+
+
+
+                            }
+
+
+
+                            else
+
+
+
+                            {
+
+
+
+                                <span class="text-white">@(esEdicion ? "Guardar Cambios" : "Crear Producto")</span>
+
+
+
+                            }
+
+
+
+                        </button>
+
+
+
+                    </div>
+
+
+
+                </EditForm>
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+}
+
+
+
+
+
+
+
+@code {
+
+
+
+    private bool cargando = true;
+
+
+
+    private bool procesando = false;
+
+
+
+    private bool guardandoPlato = false;
+
+
+
+    private bool subiendoImagen = false;
+
+
+
+    private bool mostrarModal = false;
+
+
+
+    private bool esEdicion = false;
+
+
+
+
+
+
+
+    private LocalModel? localActual;
+
+
+
+    private List<PlatoModel> platos = new();
+
+
+
+    private List<PromocionModel> promociones = new();
+
+
+
+    private CategoriaPlatoModel? filtroCategoria;
+
+
+
+    private string busquedaTexto = string.Empty;
+
+
+
+
+
+
+
+    private CreateOrUpdatePlatoModel modeloFormulario = new();
+
+
+
+    private EditContext? editContext;
+
+
+
+
+
+
+
+    private List<PlatoModel> platosFiltrados => platos
+
+
+
+        .Where(p => (!filtroCategoria.HasValue || p.Categoria == filtroCategoria.Value) &&
+
+
+
+                    (string.IsNullOrWhiteSpace(busquedaTexto) || 
+
+
+
+                     p.Nombre.Contains(busquedaTexto, StringComparison.OrdinalIgnoreCase) || 
+
+
+
+                     (p.Descripcion != null && p.Descripcion.Contains(busquedaTexto, StringComparison.OrdinalIgnoreCase))))
+
+
+
+        .ToList();
+
+
+
+
+
+
+
+    protected override async Task OnInitializedAsync()
+
+
+
+    {
+
+
+
+        await CargarDatos();
+
+
+
+    }
+
+
+
+
+
+
+
+    private void Revalidar()
+
+
+
+    {
+
+
+
+        if (editContext != null)
+
+
+
+        {
+
+
+
+            editContext.Validate();
+
+
+
+        }
+
+
+
+    }
+
+
+
+
+
+
+
+    private string ObtenerUrlImagen(string? url)
+
+
+
+    {
+
+
+
+        if (string.IsNullOrWhiteSpace(url)) return "https://placehold.co/150x150/003865/ffffff?text=Plato";
+
+
+
+        if (url.StartsWith("http")) return url;
+
+
+
+        var baseUrl = "http://localhost:5050/"; // Se puede mover a config
+
+
+
+        return $"{baseUrl.TrimEnd('/')}/{url.TrimStart('/')}";
+
+
+
+    }
+
+
+
+
+
+
+
+    private async Task SubirImagen(Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs e)
+
+
+
+    {
+
+
+
+        var archivo = e.File;
+
+
+
+        if (archivo == null) return;
+
+
+
+
+
+
+
+        if (archivo.Size > 5 * 1024 * 1024)
+
+
+
+        {
+
+
+
+            NotificationService.ShowError("La imagen no debe exceder los 5 MB.");
+
+
+
+            return;
+
+
+
+        }
+
+
+
+
+
+
+
+        subiendoImagen = true;
+
+
+
+        try
+
+
+
+        {
+
+
+
+            using var stream = archivo.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+
+
+
+            var (exito, url, msg) = await LocalService.SubirImagenAsync(stream, archivo.Name);
+
+
+
+            
+
+
+
+            if (exito && !string.IsNullOrEmpty(url))
+
+
+
+            {
+
+
+
+                modeloFormulario.ImagenUrl = url;
+
+
+
+                NotificationService.ShowSuccess("Imagen subidía correctamenúúte.");
+
+
+
+            }
+
+
+
+            else
+
+
+
+            {
+
+
+
+                NotificationService.ShowError(msg ?? "Error al subir la imagen.");
+
+
+
+            }
+
+
+
+        }
+
+
+
+        catch (Exception ex)
+
+
+
+        {
+
+
+
+            NotificationService.ShowError($"Error al subir imagen: {ex.Message}");
+
+
+
+        }
+
+
+
+        finally
+
+
+
+        {
+
+
+
+            subiendoImagen = false;
+
+
+
+        }
+
+
+
+    }
+
+
+
+
+
+
+
+    private async Task CargarDatos()
+
+
+
+    {
+
+
+
+        cargando = true;
+
+
+
+        var locales = await LocalService.GetMisLocalesAsync();
+
+
+
+        localActual = locales.FirstOrDefault();
+
+
+
+
+
+
+
+        if (localActual != null)
+
+
+
+        {
+
+
+
+            platos = await MenuService.GetPlatosAsync(localActual.Id);
+
+
+
+                promociones = await PromocionService.GetPromocionesAsync(localActual.Id);
+
+
+
+        }
+
+
+
+
+
+
+
+        cargando = false;
+
+
+
+    }
+
+
+
+
+
+
+
+    private void FiltrarPorCategoria(CategoriaPlatoModel? cat)
+
+
+
+    {
+
+
+
+        filtroCategoria = cat;
+
+
+
+    }
+
+
+
+
+
+
+
+    private async Task ToggleDisponible(PlatoModel plato)
+
+
+
+    {
+
+
+
+        plato.EstaDisponible = !plato.EstaDisponible;
+
+
+
+        var exito = await MenuService.ToggleDisponibleAsync(plato.Id);
+
+
+
+        if (!exito)
+
+
+
+        {
+
+
+
+            plato.EstaDisponible = !plato.EstaDisponible;
+
+
+
+            NotificationService.ShowError("Error al cambiar la disponibilidíad del producto.");
+
+
+
+        }
+
+
+
+        else
+
+
+
+        {
+
+
+
+            NotificationService.ShowInfo($"El producto '{plato.Nombre}' ahora está {(plato.EstaDisponible ? "disponible" : "agotado")}.");
+
+
+
+        }
+
+
+
+    }
+
+
+
+
+
+
+
+    private async Task TogglePlatoDelDia(PlatoModel plato)
+
+
+
+    {
+
+
+
+        plato.EsPlatoDelDia = !plato.EsPlatoDelDia;
+
+
+
+        var exito = await MenuService.TogglePlatoDelDiaAsync(plato.Id);
+
+
+
+        if (!exito)
+
+
+
+        {
+
+
+
+            plato.EsPlatoDelDia = !plato.EsPlatoDelDia;
+
+
+
+            NotificationService.ShowError("Error al actualizar estado de Plato del Día.");
+
+
+
+        }
+
+
+
+        else
+
+
+
+        {
+
+
+
+            NotificationService.ShowInfo(plato.EsPlatoDelDia 
+
+
+
+                ? $"El producto '{plato.Nombre}' se marcó como Plato del Día." 
+
+
+
+                : $"El producto '{plato.Nombre}' ya no es Plato del Día.");
+
+
+
+        }
+
+
+
+    }
+
+
+
+
+
+
+
+    private void AbrirModalCrear()
+
+
+
+    {
+
+
+
+        if (localActual == null) return;
+
+
+
+        esEdicion = false;
+
+
+
+        modeloFormulario = new CreateOrUpdatePlatoModel
+
+
+
+        {
+
+
+
+            LocalId = localActual.Id,
+
+
+
+            Precio = 2.50m,
+
+
+
+            EstaDisponible = true,
+
+
+
+            EsPlatoDelDia = false
+
+
+
+        };
+
+
+
+        editContext = new EditContext(modeloFormulario);
+
+
+
+        editContext.OnFieldChanged += (s, e) => StateHasChanged();
+
+
+
+        mostrarModal = true;
+
+
+
+    }
+
+
+
+
+
+
+
+    private void AbrirModalEditar(PlatoModel plato)
+
+
+
+    {
+
+
+
+        esEdicion = true;
+
+
+
+        modeloFormulario = new CreateOrUpdatePlatoModel
+
+
+
+        {
+
+
+
+            Id = plato.Id,
+
+
+
+            LocalId = plato.LocalId,
+
+
+
+            Nombre = plato.Nombre,
+
+
+
+            Descripcion = plato.Descripcion,
+
+
+
+            Precio = plato.Precio,
+
+
+
+            ImagenUrl = plato.ImagenUrl,
+
+
+
+            Categoria = plato.Categoria,
+
+
+
+            EstaDisponible = plato.EstaDisponible,
+
+
+
+            EsPlatoDelDia = plato.EsPlatoDelDia
+
+
+
+        };
+
+
+
+        editContext = new EditContext(modeloFormulario);
+
+
+
+        editContext.OnFieldChanged += (s, e) => StateHasChanged();
+
+
+
+        mostrarModal = true;
+
+
+
+    }
+
+
+
+
+
+
+
+    private void CerrarModal()
+
+
+
+    {
+
+
+
+        mostrarModal = false;
+
+
+
+    }
+
+
+
+
+
+
+
+    private async Task GuardarPlato()
+
+    {
+
+        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", "¿Estás seguro de que deseas guardar los cambios en el menú?");
+
+        if (!confirmed) return;
+
+
+
+        guardandoPlato = true;
+
+
+
+        if (esEdicion)
+
+
+
+        {
+
+
+
+            var (exito, actualizado, msg) = await MenuService.UpdateAsync(modeloFormulario);
+
+
+
+            if (exito && actualizado != null)
+
+
+
+            {
+
+
+
+                var index = platos.FindIndex(p => p.Id == actualizado.Id);
+
+
+
+                if (index >= 0)
+
+
+
+                {
+
+
+
+                    platos[index] = actualizado;
+
+
+
+                }
+
+
+
+                NotificationService.ShowSuccess($"El producto '{actualizado.Nombre}' se ha modificado correctamenúúte.");
+
+
+
+                mostrarModal = false;
+
+
+
+            }
+
+
+
+            else
+
+
+
+            {
+
+
+
+                NotificationService.ShowError(msg ?? "Error al actualizar el producto.");
+
+
+
+            }
+
+
+
+        }
+
+
+
+        else
+
+
+
+        {
+
+
+
+            var (exito, creado, msg) = await MenuService.CreateAsync(modeloFormulario);
+
+
+
+            if (exito && creado != null)
+
+
+
+            {
+
+
+
+                platos.Insert(0, creado);
+
+
+
+                NotificationService.ShowSuccess($"Producto '{creado.Nombre}' creado exitosamenúúte en el menúúú.");
+
+
+
+                mostrarModal = false;
+
+
+
+            }
+
+
+
+            else
+
+
+
+            {
+
+
+
+                NotificationService.ShowError(msg ?? "Error al crear el producto.");
+
+
+
+            }
+
+
+
+        }
+
+
+
+
+
+
+
+        guardandoPlato = false;
+
+
+
+    }
+
+
+
+
+
+
+
+    private async Task EliminarPlato(PlatoModel plato)
+
+    {
+
+        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", $"¿Estás seguro de que deseas eliminar '{plato.Nombre}'?");
+
+        if (!confirmed) return;
+
+
+
+        var exito = await MenuService.DeleteAsync(plato.Id);
+
+
+
+        if (exito)
+
+
+
+        {
+
+
+
+            platos.Remove(plato);
+
+
+
+            NotificationService.ShowSuccess($"El producto '{plato.Nombre}' ha sido eliminado.");
+
+
+
+        }
+
+
+
+        else
+
+
+
+        {
+
+
+
+            NotificationService.ShowError("Error al eliminar el producto.");
+
+
+
+        }
+
+
+
+    }
+
+
+
+}
+
+
+
