@@ -1,1081 +1,3253 @@
-ï»¿@page "/promociones"
-
-@using src.Models
-
-@using src.Services
-
-@inject PromocionService PromocionService
-
-@inject MenuService MenuService
-
-@inject LocalService LocalService
-
-@inject NotificationService NotificationService
-
-@inject IJSRuntime JS
-
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
-
-
-
-<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end gap-3 mb-4">
-
-    <div>
-
-        <h3 class="fw-bold text-dark mb-1">Mis Promociones y Combos</h3>
-
-        <p class="text-muted mb-0">Atrae mÃ¡s clientes ofreciendo descuentos especiales o combos por tiempo limitado.</p>
-
-    </div>
-
-    <div class="d-flex gap-2">
-
-        <button class="btn btn-outline-primary fw-bold shadow-sm px-3 rounded-pill d-flex align-items-center gap-2" @onclick="AbrirModalPlatos" disabled="@(localActual == null || cargando)">
-
-            <i class="bi bi-card-list"></i> Promocionar Plato
-
-        </button>
-
-        <button class="btn btn-primary fw-bold shadow-sm px-3 rounded-pill d-flex align-items-center gap-2" @onclick="() => AbrirModalCrear()" disabled="@(localActual == null || cargando)">
-
-            <i class="bi bi-plus-lg"></i> Nueva Oferta Libre
-
-        </button>
-
-    </div>
-
-</div>
-
-
-
-@if (cargando)
-
-{
-
-    <div class="text-center py-5">
-
-        <div class="spinner-border text-primary" role="status">
-
-            <span class="visually-hidden">Cargando...</span>
-
-        </div>
-
-        <p class="text-muted mt-3">Cargando tus promociones...</p>
-
-    </div>
-
-}
-
-else if (localActual == null)
-
-{
-
-    <div class="alert alert-warning border-warning-subtle shadow-sm rounded-4 p-4 d-flex align-items-center mb-4">
-
-        <i class="bi bi-exclamation-triangle-fill fs-3 text-warning me-3"></i>
-
-        <div>
-
-            <h6 class="fw-bold mb-1">Local no registrado</h6>
-
-            <p class="mb-0 small">Necesitas registrar tu local antes de poder publicar promociones.</p>
-
-        </div>
-
-    </div>
-
-}
-
-else if (!promociones.Any())
-
-{
-
-    <div class="card border-0 shadow-sm rounded-4 py-5 mb-4 text-center bg-light">
-
-        <div class="card-body">
-
-            <div class="display-1 text-muted mb-3 opacity-25">
-
-                <i class="bi bi-tags-fill"></i>
-
-            </div>
-
-            <h5 class="fw-bold text-dark mb-2">AÃºn no tienes promociones</h5>
-
-            <p class="text-muted mx-auto" style="max-width: 400px;">
-
-                Crea tu primer combo o elige un plato de tu menÃºÃºÃº para promocionarlo y atraer mÃ¡s estudiantes.
-
-            </p>
-
-            <button class="btn btn-primary rounded-pill px-4 fw-semibold mt-2 shadow-sm" @onclick="() => AbrirModalCrear()">
-
-                Publicar mi primera oferta
-
-            </button>
-
-        </div>
-
-    </div>
-
-}
-
-else
-
-{
-
-    <div class="row g-4">
-
-        <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items="promociones" Context="promo">
-
-            <div class="col-12 col-md-6 col-lg-4">
-
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative @(!promo.EstaActiva ? "opacity-75" : "")">
-
-                    
-
-                    @if (!promo.EstaActiva)
-
-                    {
-
-                        <div class="position-absolute top-0 end-0 m-3 z-3">
-
-                            <span class="badge bg-secondary rounded-pill px-3 shadow-sm">PausadÃ­a</span>
-
-                        </div>
-
-                    }
-
-
-
-                    <div style="height: 160px; background-color: #f1f5f9; overflow: hidden;" class="position-relative">
-
-                        <img src="@ObtenerUrlImagen(promo.ImagenUrl)" class="w-100 h-100 object-fit-cover" alt="@promo.Titulo" onerror="this.src='https://placehold.co/400x200/003865/ffffff?text=Promo'" />
-
-                        <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
-
-                            <div class="d-flex align-items-center gap-2">
-
-                                <span class="badge bg-primary text-white rounded-pill px-2 py-1 border border-light border-opacity-25 shadow-sm fw-bold">
-
-                                    $@promo.PrecioPromocional.ToString("0.00")
-
-                                </span>
-
-                                @if (promo.PrecioOriginal.HasValue && promo.PrecioOriginal > promo.PrecioPromocional)
-
-                                {
-
-                                    <small class="text-white-50 text-decoration-line-through fw-semibold">
-
-                                        $@promo.PrecioOriginal.Value.ToString("0.00")
-
-                                    </small>
-
-                                }
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    
-
-                    <div class="card-body d-flex flex-column p-4">
-
-                        <h6 class="fw-bold text-dark mb-1 text-truncate">@promo.Titulo</h6>
-
-                        @if (!string.IsNullOrEmpty(promo.DiasValidos))
-
-                        {
-
-                            <div class="small text-primary fw-semibold mb-2">
-
-                                <i class="bi bi-calendÃ­ar2-week"></i> VÃ¡lido: @promo.DiasValidos
-
-                            </div>
-
-                        }
-
-
-
-                        <p class="text-muted small my-2 flex-grow-1">
-
-                            @promo.Descripcion
-
-                        </p>
-
-
-
-                        <div class="text-muted small mb-3">
-
-                            <i class="bi bi-calendÃ­ar-event me-1 text-primary"></i>
-
-                            Fechas: @promo.FechaInicio.ToString("dd/MM/yyyy") al @promo.FechaFin.ToString("dd/MM/yyyy")
-
-                        </div>
-
-
-
-                        <div class="border-top pt-3 d-flex justify-content-between align-items-center">
-
-                            <button class="btn btn-sm @(promo.EstaActiva ? "btn-success" : "btn-secondary") px-3 py-1 rounded-pill fw-semibold shadow-sm"
-
-                                    @onclick="() => TogglePromo(promo)">
-
-                                <i class="bi @(promo.EstaActiva ? "bi-check-circle-fill" : "bi-pause-circle-fill") me-1 text-white"></i>
-
-                                <span class="text-white">@(promo.EstaActiva ? "Activa" : "PausadÃ­a")</span>
-
-                            </button>
-
-                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 shadow-sm fw-bold" @onclick="() => AbrirModalEditar(promo)">
-
-                                <i class="bi bi-pencil-square me-1"></i> Editar
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
-
-    </div>
-
-}
-
-
-
-<!-- Modal de SelecciÃ³n de Platos -->
-
-@if (mostrarModalPlatos)
-
-{
-
-    <div class="modal fade show d-block" style="background-color: rgba(15, 23, 42, 0.55);" tabindex="-1">
-
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-
-            <div class="modal-content border shadow-lg rounded-4 overflow-hidden bg-white">
-
-                <div class="modal-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
-
-                    <div>
-
-                        <h5 class="modal-title fw-bold text-dark mb-0">Promocionar Plato Existente</h5>
-
-                        <small class="text-muted">Elige un plato de tu menÃºÃºÃº para aplicarle un descuento</small>
-
-                    </div>
-
-                    <button type="button" class="btn-close" @onclick="CerrarModalPlatos"></button>
-
-                </div>
-
-                <div class="modal-body p-0">
-
-                    @if (platos == null || !platos.Any())
-
-                    {
-
-                        <div class="p-4 text-center text-muted">
-
-                            <i class="bi bi-inbox fs-1 mb-2 d-block"></i>
-
-                            AÃºn no tienes platos en tu menÃºÃºÃº.
-
-                        </div>
-
-                    }
-
-                    else
-
-                    {
-
-                        <div class="list-group list-group-flush">
-
-                            @foreach (var plato in platos)
-
-                            {
-
-                                <button type="button" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3" @onclick="() => SeleccionarPlatoParaPromocion(plato)">
-
-                                    <img src="@ObtenerUrlImagen(plato.ImagenUrl)" class="rounded-3 object-fit-cover shadow-sm" style="width: 50px; height: 50px;" onerror="this.src='https://placehold.co/100x100/003865/ffffff?text=Plato'" />
-
-                                    <div class="flex-grow-1">
-
-                                        <h6 class="mb-0 fw-bold text-dark">@plato.Nombre</h6>
-
-                                        <div class="text-muted small">Precio Normal: $@plato.Precio.ToString("0.00")</div>
-
-                                    </div>
-
-                                    <i class="bi bi-chevron-right text-muted"></i>
-
-                                </button>
-
-                            }
-
-                        </div>
-
-                    }
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-}
-
-
-
-<!-- Modal Principal de Formulario -->
-
-@if (mostrarModal)
-
-{
-
-    <div class="modal fade show d-block" style="background-color: rgba(15, 23, 42, 0.55);" tabindex="-1">
-
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 560px;">
-
-            <EditForm EditContext="editContext" OnValidSubmit="GuardarPromocion" class="modal-content border shadow-lg rounded-4 overflow-hidden bg-white">
-
-                <div class="modal-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
-
-                    <div>
-
-                        <h5 class="modal-title fw-bold text-dark mb-0">@(esEdicion ? "Editar PromociÃ³n" : "Detalles de la PromociÃ³n")</h5>
-
-                        <small class="text-muted">Configura los precios, dÃ­as y fechas de tu oferta</small>
-
-                    </div>
-
-                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
-
-                </div>
-
-
-
-                <DataAnnotationsValidator />
-
-
-
-                    <div class="modal-body p-4">
-
-                        <ValidationSummary class="alert alert-dÃ­anger border-dÃ­anger-subtle small fw-semibold" />
-
-
-
-                        <div class="mb-3">
-
-                            <label class="form-label fw-bold small text-dark">TÃ­tulo de la Oferta *</label>
-
-                            <InputText class="form-control text-dark fw-medium" @bind-Value="modeloPromo.Titulo" @bind-Value:after="Revalidar" placeholder="Ej: Promo 2x1 Hamburguesa / Combo Pizza" />
-
-                            <ValidationMessage For="() => modeloPromo.Titulo" class="text-dÃ­anger small mt-1" />
-
-                        </div>
-
-
-
-                        <div class="row g-3 mb-3">
-
-                            <div class="col-6">
-
-                                <label class="form-label fw-bold small text-dark">Precio Normal ($)</label>
-
-                                <div class="input-group">
-
-                                    <span class="input-group-text bg-light text-dark fw-bold border">$</span>
-
-                                    <InputNumber class="form-control text-dark fw-semibold" @bind-Value="modeloPromo.PrecioOriginal" @bind-Value:after="Revalidar" min="0" step="0.10" onkeydown="if(event.key==='-' || event.key==='e') event.preventDefault();" />
-
-                                </div>
-
-                                <ValidationMessage For="() => modeloPromo.PrecioOriginal" class="text-dÃ­anger small mt-1" />
-
-                            </div>
-
-                            <div class="col-6">
-
-                                <label class="form-label fw-bold small text-dark">Precio Oferta ($) *</label>
-
-                                <div class="input-group">
-
-                                    <span class="input-group-text bg-light text-dark fw-bold border">$</span>
-
-                                    <InputNumber class="form-control text-dark fw-bold" @bind-Value="modeloPromo.PrecioPromocional" @bind-Value:after="Revalidar" min="0" step="0.10" onkeydown="if(event.key==='-' || event.key==='e') event.preventDefault();" />
-
-                                </div>
-
-                                <ValidationMessage For="() => modeloPromo.PrecioPromocional" class="text-dÃ­anger small mt-1" />
-
-                            </div>
-
-                        </div>
-
-
-
-                        <div class="mb-4">
-
-                            <label class="form-label fw-bold small text-dark">DÃ­as de la semana que aplica la oferta <span class="text-muted fw-normal">(Opcional: Si no marcas ninguno, aplica todos los dÃ­as)</span></label>
-
-                            <div class="d-flex flex-wrap gap-2">
-
-                                @foreach (var dia in diasSeleccionados.Keys)
-
-                                {
-
-                                    <div class="form-check form-switch form-check-inline me-0 border rounded-pill px-3 py-1 @(diasSeleccionados[dia] ? "bg-primary text-white border-primary" : "bg-light text-dark")" style="cursor:pointer;" @onclick="() => ToggleDia(dia)">
-
-                                        <input class="form-check-input mÃ¡s-0 me-2 d-none" type="checkbox" checked="@diasSeleccionados[dia]" />
-
-                                        <label class="form-check-label small fw-semibold" style="cursor:pointer;">@dia</label>
-
-                                    </div>
-
-                                }
-
-                            </div>
-
-                            
-
-                        </div>
-
-
-
-                        <div class="row g-3 mb-3">
-
-                            <div class="col-6">
-
-                                <label class="form-label fw-bold small text-dark">VÃ¡lidÃ­a Desde (Fecha Inicio) *</label>
-
-                                <InputDate class="form-control text-dark" @bind-Value="modeloPromo.FechaInicio" @bind-Value:after="Revalidar" />
-
-                                <ValidationMessage For="() => modeloPromo.FechaInicio" class="text-dÃ­anger small mt-1" />
-
-                            </div>
-
-                            <div class="col-6">
-
-                                <label class="form-label fw-bold small text-dark">VÃ¡lidÃ­a Hasta (Fecha Fin) *</label>
-
-                                <InputDate class="form-control text-dark" @bind-Value="modeloPromo.FechaFin" @bind-Value:after="Revalidar" />
-
-                                <ValidationMessage For="() => modeloPromo.FechaFin" class="text-dÃ­anger small mt-1" />
-
-                            </div>
-
-                        </div>
-
-
-
-                        <div class="mb-3">
-
-                            <label class="form-label fw-bold small text-dark">DescripciÃ³n Adicional (Condiciones)</label>
-
-                            <InputTextArea class="form-control text-dark" rows="2" @bind-Value="modeloPromo.Descripcion" @bind-Value:after="Revalidar" placeholder="Ej: VÃ¡lido solo para consumo en el local. No aplica con otras promociones." />
-
-                            <ValidationMessage For="() => modeloPromo.Descripcion" class="text-dÃ­anger small mt-1" />
-
-                        </div>
-
-
-
-                        <div class="mb-3">
-
-                            <label class="form-label fw-bold small text-dark">Foto Promocional <span class="text-muted fw-normal">(opcional, mÃ¡x. 5 MB)</span></label>
-
-                            <div class="d-flex align-items-center gap-3">
-
-                                @if (!string.IsNullOrEmpty(modeloPromo.ImagenUrl))
-
-                                {
-
-                                    <img src="@ObtenerUrlImagen(modeloPromo.ImagenUrl)" alt="Vista previa" class="img-thumbnail rounded-3 shadow-sm" style="width: 64px; height: 64px; object-fit: cover;" />
-
-                                }
-
-                                <div class="flex-grow-1">
-
-                                    <InputFile OnChange="SubirImagen" accept="image/png, image/jpeg, image/webp" class="form-control form-control-sm" disabled="@subiendoImagen" />
-
-                                    @if (subiendoImagen)
-
-                                    {
-
-                                        <div class="small text-primary mt-1"><span class="spinner-border spinner-border-sm me-1"></span> Subiendo...</div>
-
-                                    }
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="modal-footer bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
-
-                        <button type="button" class="btn btn-light border px-4 fw-semibold text-dark" @onclick="CerrarModal">Cancelar</button>
-
-                        <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm" disabled="@(guardando || (editContext != null && !editContext.Validate()))">
-
-                            @if (guardando)
-
-                            {
-
-                                <span class="spinner-border spinner-border-sm me-1 text-white"></span>
-
-                                <span class="text-white">GuardÃ­ando...</span>
-
-                            }
-
-                            else
-
-                            {
-
-                                <span class="text-white">@(esEdicion ? "Guardar Cambios" : "Publicar PromociÃ³n")</span>
-
-                            }
-
-                        </button>
-
-                    </div>
-
-                </EditForm>
-
-        </div>
-
-    </div>
-
-}
-
-
-
-@code {
-
-    private bool cargando = true;
-
-    private bool guardando = false;
-
-    private bool subiendoImagen = false;
-
-    
-
-    private bool mostrarModalPlatos = false;
-
-    private bool mostrarModal = false;
-
-    private bool esEdicion = false;
-
-
-
-    private LocalModel? localActual;
-
-    private List<PromocionModel> promociones = new();
-
-    private List<PlatoModel> platos = new();
-
-    private CreatePromocionModel modeloPromo = new();
-
-    private EditContext? editContext;
-
-
-
-    private Dictionary<string, bool> diasSeleccionados = new()
-
-    {
-
-        { "Lunes", false }, { "Martes", false }, { "MiÃ©rcoles", false },
-
-        { "Jueves", false }, { "Viernes", false }, { "SÃ¡bado", false }, { "Domingo", false }
-
-    };
-
-
-
-    protected override async Task OnInitializedAsync()
-
-    {
-
-        await CargarDatos();
-
-    }
-
-
-
-    private void Revalidar()
-
-    {
-
-        if (editContext != null)
-
-        {
-
-            editContext.Validate();
-
-        }
-
-    }
-
-
-
-    private void ToggleDia(string dia)
-
-    {
-
-        if (diasSeleccionados.ContainsKey(dia))
-
-        {
-
-            diasSeleccionados[dia] = !diasSeleccionados[dia];
-
-            StateHasChanged();
-
-        }
-
-    }
-
-
-
-    private void ConfigurarDiasSeleccionados(string? diasValidos)
-
-    {
-
-        var keys = diasSeleccionados.Keys.ToList();
-
-        foreach (var k in keys) diasSeleccionados[k] = false;
-
-
-
-        if (!string.IsNullOrWhiteSpace(diasValidos))
-
-        {
-
-            var dias = diasValidos.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var d in dias)
-
-            {
-
-                if (diasSeleccionados.ContainsKey(d))
-
-                    diasSeleccionados[d] = true;
-
-            }
-
-        }
-
-    }
-
-
-
-    private void SincronizarDiasValidos()
-
-    {
-
-        var seleccionados = diasSeleccionados.Where(x => x.Value).Select(x => x.Key);
-
-        modeloPromo.DiasValidos = string.Join(", ", seleccionados);
-
-    }
-
-
-
-    private string ObtenerUrlImagen(string? url)
-
-    {
-
-        if (string.IsNullOrWhiteSpace(url)) return "https://placehold.co/150x150/003865/ffffff?text=Promo";
-
-        if (url.StartsWith("http")) return url;
-
-        var baseUrl = "http://localhost:5050/"; 
-
-        return $"{baseUrl.TrimEnd('/')}/{url.TrimStart('/')}";
-
-    }
-
-
-
-    private async Task SubirImagen(Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs e)
-
-    {
-
-        var archivo = e.File;
-
-        if (archivo == null) return;
-
-
-
-        if (archivo.Size > 5 * 1024 * 1024)
-
-        {
-
-            NotificationService.ShowError("La imagen no debe exceder los 5 MB.");
-
-            return;
-
-        }
-
-
-
-        subiendoImagen = true;
-
-        try
-
-        {
-
-            using var stream = archivo.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
-
-            var (exito, url, msg) = await LocalService.SubirImagenAsync(stream, archivo.Name);
-
-            
-
-            if (exito && !string.IsNullOrEmpty(url))
-
-            {
-
-                modeloPromo.ImagenUrl = url;
-
-                NotificationService.ShowSuccess("Imagen subidÃ­a correctamenÃºÃºte.");
-
-            }
-
-            else
-
-            {
-
-                NotificationService.ShowError(msg ?? "Error al subir la imagen.");
-
-            }
-
-        }
-
-        catch (Exception ex)
-
-        {
-
-            NotificationService.ShowError($"Error al subir imagen: {ex.Message}");
-
-        }
-
-        finally
-
-        {
-
-            subiendoImagen = false;
-
-            StateHasChanged();
-
-        }
-
-    }
-
-
-
-    private async Task CargarDatos()
-
-    {
-
-        cargando = true;
-
-        var locales = await LocalService.GetMisLocalesAsync();
-
-        localActual = locales.FirstOrDefault();
-
-
-
-        if (localActual != null)
-
-        {
-
-            promociones = await PromocionService.GetPromocionesAsync(localActual.Id);
-
-            platos = await MenuService.GetPlatosAsync(localActual.Id);
-
-        }
-
-
-
-        cargando = false;
-
-    }
-
-
-
-    private void AbrirModalPlatos()
-
-    {
-
-        mostrarModalPlatos = true;
-
-    }
-
-
-
-    private void CerrarModalPlatos()
-
-    {
-
-        mostrarModalPlatos = false;
-
-    }
-
-
-
-    private void SeleccionarPlatoParaPromocion(PlatoModel plato)
-
-    {
-
-        mostrarModalPlatos = false;
-
-        AbrirModalCrear(plato);
-
-    }
-
-
-
-    private void AbrirModalCrear(PlatoModel? platoPrecargado = null)
-
-    {
-
-        if (localActual == null) return;
-
-        esEdicion = false;
-
-        
-
-        modeloPromo = new CreatePromocionModel
-
-        {
-
-            LocalId = localActual.Id,
-
-            FechaInicio = DateTime.Today,
-
-            FechaFin = DateTime.Today.AddDays(7)
-
-        };
-
-
-
-        if (platoPrecargado != null)
-
-        {
-
-            modeloPromo.Titulo = platoPrecargado.Nombre;
-
-            modeloPromo.PlatoId = platoPrecargado.Id;
-
-            modeloPromo.Descripcion = platoPrecargado.Descripcion ?? "";
-
-            modeloPromo.PrecioOriginal = platoPrecargado.Precio;
-
-            modeloPromo.PrecioPromocional = platoPrecargado.Precio > 0 ? (platoPrecargado.Precio * 0.8m) : 0m;
-
-            modeloPromo.ImagenUrl = platoPrecargado.ImagenUrl;
-
-        }
-
-        else
-
-        {
-
-            modeloPromo.PrecioOriginal = 3.00m;
-
-            modeloPromo.PrecioPromocional = 2.25m;
-
-        }
-
-
-
-        ConfigurarDiasSeleccionados("");
-
-        
-
-        editContext = new EditContext(modeloPromo);
-
-        editContext.OnFieldChanged += (s, e) => StateHasChanged();
-
-        mostrarModal = true;
-
-    }
-
-
-
-    private void AbrirModalEditar(PromocionModel promo)
-
-    {
-
-        if (localActual == null) return;
-
-        esEdicion = true;
-
-        modeloPromo = new CreatePromocionModel
-
-        {
-
-            Id = promo.Id,
-
-            LocalId = promo.LocalId,
-
-            Titulo = promo.Titulo,
-
-            Descripcion = promo.Descripcion,
-
-            PrecioOriginal = promo.PrecioOriginal,
-
-            PrecioPromocional = promo.PrecioPromocional,
-
-            ImagenUrl = promo.ImagenUrl,
-
-            DiasValidos = promo.DiasValidos,
-
-            FechaInicio = promo.FechaInicio,
-
-            FechaFin = promo.FechaFin
-
-        };
-
-
-
-        ConfigurarDiasSeleccionados(promo.DiasValidos);
-
-
-
-        editContext = new EditContext(modeloPromo);
-
-        editContext.OnFieldChanged += (s, e) => StateHasChanged();
-
-        mostrarModal = true;
-
-    }
-
-
-
-    private void CerrarModal()
-
-    {
-
-        mostrarModal = false;
-
-    }
-
-
-
-    private async Task GuardarPromocion()
-    {
-        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", "Â¿EstÃ¡s seguro de que deseas guardar esta promociÃ³n?");
-        if (!confirmed) return;
-
-        guardando = true;
-
-        if (esEdicion)
-
-        {
-
-            var (exito, actualizadÃ­a, msg) = await PromocionService.UpdateAsync(modeloPromo.Id, modeloPromo);
-
-            if (exito && actualizadÃ­a != null)
-
-            {
-
-                var index = promociones.FindIndex(p => p.Id == modeloPromo.Id);
-
-                if (index != -1) promociones[index] = actualizadÃ­a;
-
-                NotificationService.ShowSuccess($"Â¡La promociÃ³n '{actualizadÃ­a.Titulo}' fue actualizadÃ­a!");
-
-                mostrarModal = false;
-
-            }
-
-            else
-
-            {
-
-                NotificationService.ShowError(msg ?? "Error al actualizar la promociÃ³n.");
-
-            }
-
-        }
-
-        else
-
-        {
-
-            var (exito, creadÃ­a, msg) = await PromocionService.CreateAsync(modeloPromo);
-
-            if (exito && creadÃ­a != null)
-
-            {
-
-                promociones.Insert(0, creadÃ­a);
-
-                NotificationService.ShowSuccess($"Â¡La promociÃ³n '{creadÃ­a.Titulo}' fue publicadÃ­a con Ã©xito!");
-
-                mostrarModal = false;
-
-            }
-
-            else
-
-            {
-
-                NotificationService.ShowError(msg ?? "OcurriÃ³ un error al crear la promociÃ³n.");
-
-            }
-
-        }
-
-        guardando = false;
-
-    }
-
-
-
-    private async Task TogglePromo(PromocionModel promo)
-
-    {
-
-        promo.EstaActiva = !promo.EstaActiva;
-
-        var exito = await PromocionService.ToggleAsync(promo.Id);
-
-        if (!exito)
-
-        {
-
-            promo.EstaActiva = !promo.EstaActiva;
-
-            NotificationService.ShowError("Error al cambiar el estado de la promociÃ³n.");
-
-        }
-
-        else
-
-        {
-
-            NotificationService.ShowInfo($"La promociÃ³n '{promo.Titulo}' ahora estÃ¡ {(promo.EstaActiva ? "activa" : "pausadÃ­a")}.");
-
-        }
-
-    }
-
-}
-
+@page "/promociones"
+
+
+
+
+
+@using src.Models
+
+
+
+
+
+@using src.Services
+
+
+
+
+
+@inject PromocionService PromocionService
+
+
+
+
+
+@inject MenuService MenuService
+
+
+
+
+
+@inject LocalService LocalService
+
+
+
+
+
+@inject NotificationService NotificationService
+
+
+
+
+
+@inject IJSRuntime JS
+
+
+
+
+
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+
+
+
+
+
+
+
+
+
+
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end gap-3 mb-4">
+
+
+
+
+
+    <div>
+
+
+
+
+
+        <h3 class="fw-bold text-dark mb-1">Mis Promociones y Combos</h3>
+
+
+
+
+
+        <p class="text-muted mb-0">Atrae más clientes ofreciendo descuentos especiales o combos por tiempo limitado.</p>
+
+
+
+
+
+    </div>
+
+
+
+
+
+    <div class="d-flex gap-2">
+
+
+
+
+
+        <button class="btn btn-outline-primary fw-bold shadow-sm px-3 rounded-pill d-flex align-items-center gap-2" @onclick="AbrirModalPlatos" disabled="@(localActual == null || cargando)">
+
+
+
+
+
+            <i class="bi bi-card-list"></i> Promocionar Plato
+
+
+
+
+
+        </button>
+
+
+
+
+
+        <button class="btn btn-primary fw-bold shadow-sm px-3 rounded-pill d-flex align-items-center gap-2" @onclick="() => AbrirModalCrear()" disabled="@(localActual == null || cargando)">
+
+
+
+
+
+            <i class="bi bi-plus-lg"></i> Nueva Oferta Libre
+
+
+
+
+
+        </button>
+
+
+
+
+
+    </div>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+@if (cargando)
+
+
+
+
+
+{
+
+
+
+
+
+    <div class="text-center py-5">
+
+
+
+
+
+        <div class="spinner-border text-primary" role="status">
+
+
+
+
+
+            <span class="visually-hidden">Cargando...</span>
+
+
+
+
+
+        </div>
+
+
+
+
+
+        <p class="text-muted mt-3">Cargando tus promociones...</p>
+
+
+
+
+
+    </div>
+
+
+
+
+
+}
+
+
+
+
+
+else if (localActual == null)
+
+
+
+
+
+{
+
+
+
+
+
+    <div class="alert alert-warning border-warning-subtle shadow-sm rounded-4 p-4 d-flex align-items-center mb-4">
+
+
+
+
+
+        <i class="bi bi-exclamation-triangle-fill fs-3 text-warning me-3"></i>
+
+
+
+
+
+        <div>
+
+
+
+
+
+            <h6 class="fw-bold mb-1">Local no registrado</h6>
+
+
+
+
+
+            <p class="mb-0 small">Necesitas registrar tu local antes de poder publicar promociones.</p>
+
+
+
+
+
+        </div>
+
+
+
+
+
+    </div>
+
+
+
+
+
+}
+
+
+
+
+
+else if (!promociones.Any())
+
+
+
+
+
+{
+
+
+
+
+
+    <div class="card border-0 shadow-sm rounded-4 py-5 mb-4 text-center bg-light">
+
+
+
+
+
+        <div class="card-body">
+
+
+
+
+
+            <div class="display-1 text-muted mb-3 opacity-25">
+
+
+
+
+
+                <i class="bi bi-tags-fill"></i>
+
+
+
+
+
+            </div>
+
+
+
+
+
+            <h5 class="fw-bold text-dark mb-2">Aún no tienes promociones</h5>
+
+
+
+
+
+            <p class="text-muted mx-auto" style="max-width: 400px;">
+
+
+
+
+
+                Crea tu primer combo o elige un plato de tu menúúú para promocionarlo y atraer más estudiantes.
+
+
+
+
+
+            </p>
+
+
+
+
+
+            <button class="btn btn-primary rounded-pill px-4 fw-semibold mt-2 shadow-sm" @onclick="() => AbrirModalCrear()">
+
+
+
+
+
+                Publicar mi primera oferta
+
+
+
+
+
+            </button>
+
+
+
+
+
+        </div>
+
+
+
+
+
+    </div>
+
+
+
+
+
+}
+
+
+
+
+
+else
+
+
+
+
+
+{
+
+
+
+
+
+    <ul class="nav nav-pills mb-4">
+        <li class="nav-item">
+            <button class="nav-link @(mostrarActivas ? "active fw-bold shadow-sm" : "text-muted")" @onclick="() => mostrarActivas = true">
+                <i class="bi bi-check-circle-fill me-1"></i> Activas
+            </button>
+        </li>
+        <li class="nav-item ms-2">
+            <button class="nav-link @(!mostrarActivas ? "active fw-bold shadow-sm bg-secondary text-white" : "text-muted")" @onclick="() => mostrarActivas = false">
+                <i class="bi bi-pause-circle-fill me-1"></i> Pausadas / Vencidas
+            </button>
+        </li>
+    </ul>
+
+    <div class="row g-4">
+        <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items="promocionesFiltradas" Context="promo">
+
+
+
+
+
+            <div class="col-12 col-md-6 col-lg-4">
+
+
+
+
+
+                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative @(!promo.EstaActiva ? "opacity-75" : "")">
+
+
+
+
+
+                    
+
+
+
+
+
+                    @if (!promo.EstaActiva)
+
+
+
+
+
+                    {
+
+
+
+
+
+                        <div class="position-absolute top-0 end-0 m-3 z-3">
+
+
+
+
+
+                            <span class="badge bg-secondary rounded-pill px-3 shadow-sm">Pausadía</span>
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    }
+
+
+
+
+
+
+
+
+
+
+
+                    <div style="height: 160px; background-color: #f1f5f9; overflow: hidden;" class="position-relative">
+
+
+
+
+
+                        <img src="@ObtenerUrlImagen(promo.ImagenUrl)" class="w-100 h-100 object-fit-cover" alt="@promo.Titulo" onerror="this.src='https://placehold.co/400x200/003865/ffffff?text=Promo'" />
+
+
+
+
+
+                        <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+
+
+
+
+
+                            <div class="d-flex align-items-center gap-2">
+
+
+
+
+
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1 border border-light border-opacity-25 shadow-sm fw-bold">
+
+
+
+
+
+                                    $@promo.PrecioPromocional.ToString("0.00")
+
+
+
+
+
+                                </span>
+
+
+
+
+
+                                @if (promo.PrecioOriginal.HasValue && promo.PrecioOriginal > promo.PrecioPromocional)
+
+
+
+
+
+                                {
+
+
+
+
+
+                                    <small class="text-white-50 text-decoration-line-through fw-semibold">
+
+
+
+
+
+                                        $@promo.PrecioOriginal.Value.ToString("0.00")
+
+
+
+
+
+                                    </small>
+
+
+
+
+
+                                }
+
+
+
+
+
+                            </div>
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+
+
+
+                    
+
+
+
+
+
+                    <div class="card-body d-flex flex-column p-4">
+
+
+
+
+
+                        <h6 class="fw-bold text-dark mb-1 text-truncate">@promo.Titulo</h6>
+
+
+
+
+
+                        @if (!string.IsNullOrEmpty(promo.DiasValidos))
+
+
+
+
+
+                        {
+
+
+
+
+
+                            <div class="small text-primary fw-semibold mb-2">
+
+
+
+
+
+                                <i class="bi bi-calendíar2-week"></i> Válido: @promo.DiasValidos
+
+
+
+
+
+                            </div>
+
+
+
+
+
+                        }
+
+
+
+
+
+
+
+
+
+
+
+                        <p class="text-muted small my-2 flex-grow-1">
+
+
+
+
+
+                            @promo.Descripcion
+
+
+
+
+
+                        </p>
+
+
+
+
+
+
+
+
+
+
+
+                        <div class="text-muted small mb-3">
+
+
+
+
+
+                            <i class="bi bi-calendíar-event me-1 text-primary"></i>
+
+
+
+
+
+                            Fechas: @promo.FechaInicio.ToString("dd/MM/yyyy") al @promo.FechaFin.ToString("dd/MM/yyyy")
+
+
+
+
+
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+                        <div class="border-top pt-3 d-flex justify-content-between align-items-center">
+
+
+
+
+
+                            <button class="btn btn-sm @(promo.EstaActiva ? "btn-success" : "btn-secondary") px-3 py-1 rounded-pill fw-semibold shadow-sm"
+
+
+
+
+
+                                    @onclick="() => TogglePromo(promo)">
+
+
+
+
+
+                                <i class="bi @(promo.EstaActiva ? "bi-check-circle-fill" : "bi-pause-circle-fill") me-1 text-white"></i>
+
+
+
+
+
+                                <span class="text-white">@(promo.EstaActiva ? "Activa" : "Pausadía")</span>
+
+
+
+
+
+                            </button>
+
+
+
+
+
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 shadow-sm fw-bold" @onclick="() => AbrirModalEditar(promo)">
+
+
+
+
+
+                                <i class="bi bi-pencil-square me-1"></i> Editar
+
+
+
+
+
+                            </button>
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+
+
+
+                </div>
+
+
+
+
+
+            </div>
+
+
+
+
+
+        </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+
+
+
+
+
+    </div>
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+<!-- Modal de Selección de Platos -->
+
+
+
+
+
+@if (mostrarModalPlatos)
+
+
+
+
+
+{
+
+
+
+
+
+    <div class="modal fade show d-block" style="background-color: rgba(15, 23, 42, 0.55);" tabindex="-1">
+
+
+
+
+
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+
+
+
+
+
+            <div class="modal-content border shadow-lg rounded-4 overflow-hidden bg-white">
+
+
+
+
+
+                <div class="modal-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+
+
+
+
+
+                    <div>
+
+
+
+
+
+                        <h5 class="modal-title fw-bold text-dark mb-0">Promocionar Plato Existente</h5>
+
+
+
+
+
+                        <small class="text-muted">Elige un plato de tu menúúú para aplicarle un descuento</small>
+
+
+
+
+
+                    </div>
+
+
+
+
+
+                    <button type="button" class="btn-close" @onclick="CerrarModalPlatos"></button>
+
+
+
+
+
+                </div>
+
+
+
+
+
+                <div class="modal-body p-0">
+
+
+
+
+
+                    @if (platos == null || !platos.Any())
+
+
+
+
+
+                    {
+
+
+
+
+
+                        <div class="p-4 text-center text-muted">
+
+
+
+
+
+                            <i class="bi bi-inbox fs-1 mb-2 d-block"></i>
+
+
+
+
+
+                            Aún no tienes platos en tu menúúú.
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    }
+
+
+
+
+
+                    else
+
+
+
+
+
+                    {
+
+
+
+
+
+                        <div class="list-group list-group-flush">
+
+
+
+
+
+                            @foreach (var plato in platos)
+
+
+
+
+
+                            {
+
+
+
+
+
+                                <button type="button" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3" @onclick="() => SeleccionarPlatoParaPromocion(plato)">
+
+
+
+
+
+                                    <img src="@ObtenerUrlImagen(plato.ImagenUrl)" class="rounded-3 object-fit-cover shadow-sm" style="width: 50px; height: 50px;" onerror="this.src='https://placehold.co/100x100/003865/ffffff?text=Plato'" />
+
+
+
+
+
+                                    <div class="flex-grow-1">
+
+
+
+
+
+                                        <h6 class="mb-0 fw-bold text-dark">@plato.Nombre</h6>
+
+
+
+
+
+                                        <div class="text-muted small">Precio Normal: $@plato.Precio.ToString("0.00")</div>
+
+
+
+
+
+                                    </div>
+
+
+
+
+
+                                    <i class="bi bi-chevron-right text-muted"></i>
+
+
+
+
+
+                                </button>
+
+
+
+
+
+                            }
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    }
+
+
+
+
+
+                </div>
+
+
+
+
+
+            </div>
+
+
+
+
+
+        </div>
+
+
+
+
+
+    </div>
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+<!-- Modal Principal de Formulario -->
+
+
+
+
+
+@if (mostrarModal)
+
+
+
+
+
+{
+
+
+
+
+
+    <div class="modal fade show d-block" style="background-color: rgba(15, 23, 42, 0.55);" tabindex="-1">
+
+
+
+
+
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 560px;">
+
+
+
+
+
+            <EditForm EditContext="editContext" OnValidSubmit="GuardarPromocion" class="modal-content border shadow-lg rounded-4 overflow-hidden bg-white">
+
+
+
+
+
+                <div class="modal-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+
+
+
+
+
+                    <div>
+
+
+
+
+
+                        <h5 class="modal-title fw-bold text-dark mb-0">@(esEdicion ? "Editar Promoción" : "Detalles de la Promoción")</h5>
+
+
+
+
+
+                        <small class="text-muted">Configura los precios, días y fechas de tu oferta</small>
+
+
+
+
+
+                    </div>
+
+
+
+
+
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+
+
+
+
+
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+                <DataAnnotationsValidator />
+
+
+
+
+
+
+
+
+
+
+
+                    <div class="modal-body p-4">
+
+
+
+
+
+                        <ValidationSummary class="alert alert-díanger border-díanger-subtle small fw-semibold" />
+
+
+
+
+
+
+
+
+
+
+
+                        <div class="mb-3">
+
+
+
+
+
+                            <label class="form-label fw-bold small text-dark">Título de la Oferta *</label>
+
+
+
+
+
+                            <InputText class="form-control text-dark fw-medium" @bind-Value="modeloPromo.Titulo" @bind-Value:after="Revalidar" placeholder="Ej: Promo 2x1 Hamburguesa / Combo Pizza" />
+
+
+
+
+
+                            <ValidationMessage For="() => modeloPromo.Titulo" class="text-díanger small mt-1" />
+
+
+
+
+
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+                        <div class="row g-3 mb-3">
+
+
+
+
+
+                            <div class="col-6">
+
+
+
+
+
+                                <label class="form-label fw-bold small text-dark">Precio Normal ($)</label>
+
+
+
+
+
+                                <div class="input-group">
+
+
+
+
+
+                                    <span class="input-group-text bg-light text-dark fw-bold border">$</span>
+
+
+
+
+
+                                    <InputNumber class="form-control text-dark fw-semibold" @bind-Value="modeloPromo.PrecioOriginal" @bind-Value:after="Revalidar" min="0" step="0.10" onkeydown="if(event.key==='-' || event.key==='e') event.preventDefault();" />
+
+
+
+
+
+                                </div>
+
+
+
+
+
+                                <ValidationMessage For="() => modeloPromo.PrecioOriginal" class="text-díanger small mt-1" />
+
+
+
+
+
+                            </div>
+
+
+
+
+
+                            <div class="col-6">
+
+
+
+
+
+                                <label class="form-label fw-bold small text-dark">Precio Oferta ($) *</label>
+
+
+
+
+
+                                <div class="input-group">
+
+
+
+
+
+                                    <span class="input-group-text bg-light text-dark fw-bold border">$</span>
+
+
+
+
+
+                                    <InputNumber class="form-control text-dark fw-bold" @bind-Value="modeloPromo.PrecioPromocional" @bind-Value:after="Revalidar" min="0" step="0.10" onkeydown="if(event.key==='-' || event.key==='e') event.preventDefault();" />
+
+
+
+
+
+                                </div>
+
+
+
+
+
+                                <ValidationMessage For="() => modeloPromo.PrecioPromocional" class="text-díanger small mt-1" />
+
+
+
+
+
+                            </div>
+
+
+
+
+
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+                        <div class="mb-4">
+
+
+
+
+
+                            <label class="form-label fw-bold small text-dark">Días de la semana que aplica la oferta <span class="text-muted fw-normal">(Opcional: Si no marcas ninguno, aplica todos los días)</span></label>
+
+
+
+
+
+                            <div class="d-flex flex-wrap gap-2">
+
+
+
+
+
+                                @foreach (var dia in diasSeleccionados.Keys)
+
+
+
+
+
+                                {
+
+
+
+
+
+                                    <div class="form-check form-switch form-check-inline me-0 border rounded-pill px-3 py-1 @(diasSeleccionados[dia] ? "bg-primary text-white border-primary" : "bg-light text-dark")" style="cursor:pointer;" @onclick="() => ToggleDia(dia)">
+
+
+
+
+
+                                        <input class="form-check-input más-0 me-2 d-none" type="checkbox" checked="@diasSeleccionados[dia]" />
+
+
+
+
+
+                                        <label class="form-check-label small fw-semibold" style="cursor:pointer;">@dia</label>
+
+
+
+
+
+                                    </div>
+
+
+
+
+
+                                }
+
+
+
+
+
+                            </div>
+
+
+
+
+
+                            
+
+
+
+
+
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+                        <div class="row g-3 mb-3">
+
+
+
+
+
+                            <div class="col-6">
+
+
+
+
+
+                                <label class="form-label fw-bold small text-dark">Válidía Desde (Fecha Inicio) *</label>
+
+
+
+
+
+                                <InputDate class="form-control text-dark" @bind-Value="modeloPromo.FechaInicio" @bind-Value:after="Revalidar" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+
+
+
+
+
+                                <ValidationMessage For="() => modeloPromo.FechaInicio" class="text-díanger small mt-1" />
+
+
+
+
+
+                            </div>
+
+
+
+
+
+                            <div class="col-6">
+
+
+
+
+
+                                <label class="form-label fw-bold small text-dark">Válidía Hasta (Fecha Fin) *</label>
+
+
+
+
+
+                                <InputDate class="form-control text-dark" @bind-Value="modeloPromo.FechaFin" @bind-Value:after="Revalidar" min="@modeloPromo.FechaInicio.ToString("yyyy-MM-dd")" />
+
+
+
+
+
+                                <ValidationMessage For="() => modeloPromo.FechaFin" class="text-díanger small mt-1" />
+
+
+
+
+
+                            </div>
+
+
+
+
+
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+                        <div class="mb-3">
+
+
+
+
+
+                            <label class="form-label fw-bold small text-dark">Descripción Adicional (Condiciones)</label>
+
+
+
+
+
+                            <InputTextArea class="form-control text-dark" rows="2" @bind-Value="modeloPromo.Descripcion" @bind-Value:after="Revalidar" placeholder="Ej: Válido solo para consumo en el local. No aplica con otras promociones." />
+
+
+
+
+
+                            <ValidationMessage For="() => modeloPromo.Descripcion" class="text-díanger small mt-1" />
+
+
+
+
+
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+                        <div class="mb-3">
+
+
+
+
+
+                            <label class="form-label fw-bold small text-dark">Foto Promocional <span class="text-muted fw-normal">(opcional, máx. 5 MB)</span></label>
+
+
+
+
+
+                            <div class="d-flex align-items-center gap-3">
+
+
+
+
+
+                                @if (!string.IsNullOrEmpty(modeloPromo.ImagenUrl))
+
+
+
+
+
+                                {
+
+
+
+
+
+                                    <img src="@ObtenerUrlImagen(modeloPromo.ImagenUrl)" alt="Vista previa" class="img-thumbnail rounded-3 shadow-sm" style="width: 64px; height: 64px; object-fit: cover;" />
+
+
+
+
+
+                                }
+
+
+
+
+
+                                <div class="flex-grow-1">
+
+
+
+
+
+                                    <InputFile OnChange="SubirImagen" accept="image/png, image/jpeg, image/webp" class="form-control form-control-sm" disabled="@subiendoImagen" />
+
+
+
+
+
+                                    @if (subiendoImagen)
+
+
+
+
+
+                                    {
+
+
+
+
+
+                                        <div class="small text-primary mt-1"><span class="spinner-border spinner-border-sm me-1"></span> Subiendo...</div>
+
+
+
+
+
+                                    }
+
+
+
+
+
+                                </div>
+
+
+
+
+
+                            </div>
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+
+
+
+
+
+
+
+
+
+                    <div class="modal-footer bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
+
+
+
+
+
+                        <button type="button" class="btn btn-light border px-4 fw-semibold text-dark" @onclick="CerrarModal">Cancelar</button>
+
+
+
+
+
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm" disabled="@(guardando || (editContext != null && !editContext.Validate()))">
+
+
+
+
+
+                            @if (guardando)
+
+
+
+
+
+                            {
+
+
+
+
+
+                                <span class="spinner-border spinner-border-sm me-1 text-white"></span>
+
+
+
+
+
+                                <span class="text-white">Guardíando...</span>
+
+
+
+
+
+                            }
+
+
+
+
+
+                            else
+
+
+
+
+
+                            {
+
+
+
+
+
+                                <span class="text-white">@(esEdicion ? "Guardar Cambios" : "Publicar Promoción")</span>
+
+
+
+
+
+                            }
+
+
+
+
+
+                        </button>
+
+
+
+
+
+                    </div>
+
+
+
+
+
+                </EditForm>
+
+
+
+
+
+        </div>
+
+
+
+
+
+    </div>
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+@code {
+
+    private bool mostrarActivas = true;
+    private ICollection<PromocionModel> promocionesFiltradas => mostrarActivas 
+        ? promociones.Where(p => p.EstaActiva).ToList() 
+        : promociones.Where(p => !p.EstaActiva).ToList();
+
+    private bool cargando = true;
+
+
+
+
+
+    private bool guardando = false;
+
+
+
+
+
+    private bool subiendoImagen = false;
+
+
+
+
+
+    
+
+
+
+
+
+    private bool mostrarModalPlatos = false;
+
+
+
+
+
+    private bool mostrarModal = false;
+
+
+
+
+
+    private bool esEdicion = false;
+
+
+
+
+
+
+
+
+
+
+
+    private LocalModel? localActual;
+
+
+
+
+
+    private List<PromocionModel> promociones = new();
+
+
+
+
+
+    private List<PlatoModel> platos = new();
+
+
+
+
+
+    private CreatePromocionModel modeloPromo = new();
+
+
+
+
+
+    private EditContext? editContext;
+
+
+
+
+
+
+
+
+
+
+
+    private Dictionary<string, bool> diasSeleccionados = new()
+
+
+
+
+
+    {
+
+
+
+
+
+        { "Lunes", false }, { "Martes", false }, { "Miércoles", false },
+
+
+
+
+
+        { "Jueves", false }, { "Viernes", false }, { "Sábado", false }, { "Domingo", false }
+
+
+
+
+
+    };
+
+
+
+
+
+
+
+
+
+
+
+    protected override async Task OnInitializedAsync()
+
+
+
+
+
+    {
+
+
+
+
+
+        await CargarDatos();
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private void Revalidar()
+
+
+
+
+
+    {
+
+
+
+
+
+        if (editContext != null)
+
+
+
+
+
+        {
+
+
+
+
+
+            editContext.Validate();
+
+
+
+
+
+        }
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private void ToggleDia(string dia)
+
+
+
+
+
+    {
+
+
+
+
+
+        if (diasSeleccionados.ContainsKey(dia))
+
+
+
+
+
+        {
+
+
+
+
+
+            diasSeleccionados[dia] = !diasSeleccionados[dia];
+
+
+
+
+
+            StateHasChanged();
+
+
+
+
+
+        }
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private void ConfigurarDiasSeleccionados(string? diasValidos)
+
+
+
+
+
+    {
+
+
+
+
+
+        var keys = diasSeleccionados.Keys.ToList();
+
+
+
+
+
+        foreach (var k in keys) diasSeleccionados[k] = false;
+
+
+
+
+
+
+
+
+
+
+
+        if (!string.IsNullOrWhiteSpace(diasValidos))
+
+
+
+
+
+        {
+
+
+
+
+
+            var dias = diasValidos.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+
+
+
+
+            foreach (var d in dias)
+
+
+
+
+
+            {
+
+
+
+
+
+                if (diasSeleccionados.ContainsKey(d))
+
+
+
+
+
+                    diasSeleccionados[d] = true;
+
+
+
+
+
+            }
+
+
+
+
+
+        }
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private void SincronizarDiasValidos()
+
+
+
+
+
+    {
+
+
+
+
+
+        var seleccionados = diasSeleccionados.Where(x => x.Value).Select(x => x.Key);
+
+
+
+
+
+        modeloPromo.DiasValidos = string.Join(", ", seleccionados);
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private string ObtenerUrlImagen(string? url)
+
+
+
+
+
+    {
+
+
+
+
+
+        if (string.IsNullOrWhiteSpace(url)) return "https://placehold.co/150x150/003865/ffffff?text=Promo";
+
+
+
+
+
+        if (url.StartsWith("http")) return url;
+
+
+
+
+
+        var baseUrl = "http://localhost:5050/"; 
+
+
+
+
+
+        return $"{baseUrl.TrimEnd('/')}/{url.TrimStart('/')}";
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private async Task SubirImagen(Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs e)
+
+
+
+
+
+    {
+
+
+
+
+
+        var archivo = e.File;
+
+
+
+
+
+        if (archivo == null) return;
+
+
+
+
+
+
+
+
+
+
+
+        if (archivo.Size > 5 * 1024 * 1024)
+
+
+
+
+
+        {
+
+
+
+
+
+            NotificationService.ShowError("La imagen no debe exceder los 5 MB.");
+
+
+
+
+
+            return;
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+        subiendoImagen = true;
+
+
+
+
+
+        try
+
+
+
+
+
+        {
+
+
+
+
+
+            using var stream = archivo.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+
+
+
+
+
+            var (exito, url, msg) = await LocalService.SubirImagenAsync(stream, archivo.Name);
+
+
+
+
+
+            
+
+
+
+
+
+            if (exito && !string.IsNullOrEmpty(url))
+
+
+
+
+
+            {
+
+
+
+
+
+                modeloPromo.ImagenUrl = url;
+
+
+
+
+
+                NotificationService.ShowSuccess("Imagen subidía correctamenúúte.");
+
+
+
+
+
+            }
+
+
+
+
+
+            else
+
+
+
+
+
+            {
+
+
+
+
+
+                NotificationService.ShowError(msg ?? "Error al subir la imagen.");
+
+
+
+
+
+            }
+
+
+
+
+
+        }
+
+
+
+
+
+        catch (Exception ex)
+
+
+
+
+
+        {
+
+
+
+
+
+            NotificationService.ShowError($"Error al subir imagen: {ex.Message}");
+
+
+
+
+
+        }
+
+
+
+
+
+        finally
+
+
+
+
+
+        {
+
+
+
+
+
+            subiendoImagen = false;
+
+
+
+
+
+            StateHasChanged();
+
+
+
+
+
+        }
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private async Task CargarDatos()
+
+
+
+
+
+    {
+
+
+
+
+
+        cargando = true;
+
+
+
+
+
+        var locales = await LocalService.GetMisLocalesAsync();
+
+
+
+
+
+        localActual = locales.FirstOrDefault();
+
+
+
+
+
+
+
+
+
+
+
+        if (localActual != null)
+
+
+
+
+
+        {
+
+
+
+
+
+            promociones = await PromocionService.GetPromocionesAsync(localActual.Id);
+
+
+
+
+
+            platos = await MenuService.GetPlatosAsync(localActual.Id);
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+        cargando = false;
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private void AbrirModalPlatos()
+
+
+
+
+
+    {
+
+
+
+
+
+        mostrarModalPlatos = true;
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private void CerrarModalPlatos()
+
+
+
+
+
+    {
+
+
+
+
+
+        mostrarModalPlatos = false;
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private void SeleccionarPlatoParaPromocion(PlatoModel plato)
+
+
+
+
+
+    {
+
+
+
+
+
+        mostrarModalPlatos = false;
+
+
+
+
+
+        AbrirModalCrear(plato);
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private void AbrirModalCrear(PlatoModel? platoPrecargado = null)
+
+
+
+
+
+    {
+
+
+
+
+
+        if (localActual == null) return;
+
+
+
+
+
+        esEdicion = false;
+
+
+
+
+
+        
+
+
+
+
+
+        modeloPromo = new CreatePromocionModel
+
+
+
+
+
+        {
+
+
+
+
+
+            LocalId = localActual.Id,
+
+
+
+
+
+            FechaInicio = DateTime.Today,
+
+
+
+
+
+            FechaFin = DateTime.Today.AddDays(7)
+
+
+
+
+
+        };
+
+
+
+
+
+
+
+
+
+
+
+        if (platoPrecargado != null)
+
+
+
+
+
+        {
+
+
+
+
+
+            modeloPromo.Titulo = platoPrecargado.Nombre;
+
+
+
+
+
+            modeloPromo.PlatoId = platoPrecargado.Id;
+
+
+
+
+
+            modeloPromo.Descripcion = platoPrecargado.Descripcion ?? "";
+
+
+
+
+
+            modeloPromo.PrecioOriginal = platoPrecargado.Precio;
+
+
+
+
+
+            modeloPromo.PrecioPromocional = platoPrecargado.Precio > 0 ? (platoPrecargado.Precio * 0.8m) : 0m;
+
+
+
+
+
+            modeloPromo.ImagenUrl = platoPrecargado.ImagenUrl;
+
+
+
+
+
+        }
+
+
+
+
+
+        else
+
+
+
+
+
+        {
+
+
+
+
+
+            modeloPromo.PrecioOriginal = 3.00m;
+
+
+
+
+
+            modeloPromo.PrecioPromocional = 2.25m;
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+        ConfigurarDiasSeleccionados("");
+
+
+
+
+
+        
+
+
+
+
+
+        editContext = new EditContext(modeloPromo);
+
+
+
+
+
+        editContext.OnFieldChanged += (s, e) => StateHasChanged();
+
+
+
+
+
+        mostrarModal = true;
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private void AbrirModalEditar(PromocionModel promo)
+
+
+
+
+
+    {
+
+
+
+
+
+        if (localActual == null) return;
+
+
+
+
+
+        esEdicion = true;
+
+
+
+
+
+        modeloPromo = new CreatePromocionModel
+
+
+
+
+
+        {
+
+
+
+
+
+            Id = promo.Id,
+
+
+
+
+
+            LocalId = promo.LocalId,
+
+
+
+
+
+            Titulo = promo.Titulo,
+
+
+
+
+
+            Descripcion = promo.Descripcion,
+
+
+
+
+
+            PrecioOriginal = promo.PrecioOriginal,
+
+
+
+
+
+            PrecioPromocional = promo.PrecioPromocional,
+
+
+
+
+
+            ImagenUrl = promo.ImagenUrl,
+
+
+
+
+
+            DiasValidos = promo.DiasValidos,
+
+
+
+
+
+            FechaInicio = promo.FechaInicio,
+
+
+
+
+
+            FechaFin = promo.FechaFin
+
+
+
+
+
+        };
+
+
+
+
+
+
+
+
+
+
+
+        ConfigurarDiasSeleccionados(promo.DiasValidos);
+
+
+
+
+
+
+
+
+
+
+
+        editContext = new EditContext(modeloPromo);
+
+
+
+
+
+        editContext.OnFieldChanged += (s, e) => StateHasChanged();
+
+
+
+
+
+        mostrarModal = true;
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private void CerrarModal()
+
+
+
+
+
+    {
+
+
+
+
+
+        mostrarModal = false;
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private async Task GuardarPromocion()
+
+
+    {
+
+
+        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", "¿Estás seguro de que deseas guardar esta promoción?");
+
+
+        if (!confirmed) return;
+
+
+
+
+
+        guardando = true;
+
+
+
+
+
+        if (esEdicion)
+
+
+
+
+
+        {
+
+
+
+
+
+            var (exito, actualizadía, msg) = await PromocionService.UpdateAsync(modeloPromo.Id, modeloPromo);
+
+
+
+
+
+            if (exito && actualizadía != null)
+
+
+
+
+
+            {
+
+
+
+
+
+                var index = promociones.FindIndex(p => p.Id == modeloPromo.Id);
+
+
+
+
+
+                if (index != -1) promociones[index] = actualizadía;
+
+
+
+
+
+                NotificationService.ShowSuccess($"¡La promoción '{actualizadía.Titulo}' fue actualizadía!");
+
+
+
+
+
+                mostrarModal = false;
+
+
+
+
+
+            }
+
+
+
+
+
+            else
+
+
+
+
+
+            {
+
+
+
+
+
+                NotificationService.ShowError(msg ?? "Error al actualizar la promoción.");
+
+
+
+
+
+            }
+
+
+
+
+
+        }
+
+
+
+
+
+        else
+
+
+
+
+
+        {
+
+
+
+
+
+            var (exito, creadía, msg) = await PromocionService.CreateAsync(modeloPromo);
+
+
+
+
+
+            if (exito && creadía != null)
+
+
+
+
+
+            {
+
+
+
+
+
+                promociones.Insert(0, creadía);
+
+
+
+
+
+                NotificationService.ShowSuccess($"¡La promoción '{creadía.Titulo}' fue publicadía con éxito!");
+
+
+
+
+
+                mostrarModal = false;
+
+
+
+
+
+            }
+
+
+
+
+
+            else
+
+
+
+
+
+            {
+
+
+
+
+
+                NotificationService.ShowError(msg ?? "Ocurrió un error al crear la promoción.");
+
+
+
+
+
+            }
+
+
+
+
+
+        }
+
+
+
+
+
+        guardando = false;
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private async Task TogglePromo(PromocionModel promo)
+
+
+
+
+
+    {
+
+
+
+
+
+        promo.EstaActiva = !promo.EstaActiva;
+
+
+
+
+
+        var exito = await PromocionService.ToggleAsync(promo.Id);
+
+
+
+
+
+        if (!exito)
+
+
+
+
+
+        {
+
+
+
+
+
+            promo.EstaActiva = !promo.EstaActiva;
+
+
+
+
+
+            NotificationService.ShowError("Error al cambiar el estado de la promoción.");
+
+
+
+
+
+        }
+
+
+
+
+
+        else
+
+
+
+
+
+        {
+
+
+
+
+
+            NotificationService.ShowInfo($"La promoción '{promo.Titulo}' ahora está {(promo.EstaActiva ? "activa" : "pausadía")}.");
+
+
+
+
+
+        }
+
+
+
+
+
+    }
+
+
+
+
+
+}
+
+
+
+
+
+

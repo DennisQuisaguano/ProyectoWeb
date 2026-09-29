@@ -44,6 +44,9 @@ public class CreatePromocionCommandValidator : AbstractValidator<CreatePromocion
         RuleFor(v => v.PrecioPromocional)
             .GreaterThanOrEqualTo(0).WithMessage("El precio promocional no puede ser menor a 0.");
 
+        RuleFor(v => v.FechaInicio)
+            .GreaterThanOrEqualTo(DateTime.UtcNow.Date).WithMessage("La fecha de inicio no puede ser menor a la fecha actual.");
+
         RuleFor(v => v.FechaFin)
             .GreaterThan(v => v.FechaInicio).WithMessage("La fecha de fin debe ser posterior a la fecha de inicio.");
     }

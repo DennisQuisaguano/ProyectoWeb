@@ -1,4 +1,4 @@
-ï»¿@page "/local"
+@page "/local"
 @attribute [Authorize]
 @inject LocalService LocalService
 @inject AuthService AuthService
@@ -9,12 +9,12 @@
 @inject IJSRuntime JSRuntime
 @inject NotificationService NotificationService
 
-<PageTitle>Mi Local - Sistema GastronÃ³mico UTA</PageTitle>
+<PageTitle>Mi Local - Sistema Gastronómico UTA</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
     <div>
-        <h2 class="fw-bold mb-1 text-dark">InformaciÃ³n de Mi Local</h2>
-        <p class="text-muted small mb-0">Configura los datos que verÃ¡n los estudiantes de la UTA al buscar comida</p>
+        <h2 class="fw-bold mb-1 text-dark">Información de Mi Local</h2>
+        <p class="text-muted small mb-0">Configura los datos que verán los estudiantes de la UTA al buscar comida</p>
     </div>
 </div>
 
@@ -37,8 +37,8 @@ else
                             <div class="alert badge-amber d-flex align-items-center mb-4 rounded-3 p-3 border" role="alert">
                                 <i class="bi bi-clock-history fs-3 me-3"></i>
                                 <div>
-                                    <h6 class="fw-bold mb-1">Su local estÃ¡ en revisiÃ³n por un administrador</h6>
-                                    <p class="mb-0 small opacity-90">Estamos validando tu informaciÃ³n y certificado RUC adjunto antes de activar la publicaciÃ³n para los estudiantes de la UTA.</p>
+                                    <h6 class="fw-bold mb-1">Su local está en revisión por un administrador</h6>
+                                    <p class="mb-0 small opacity-90">Estamos validando tu información y certificado RUC adjunto antes de activar la publicación para los estudiantes de la UTA.</p>
                                 </div>
                             </div>
                         }
@@ -47,8 +47,8 @@ else
                             <div class="alert alert-success border-success d-flex align-items-center mb-4 rounded-3 p-3" role="alert">
                                 <i class="bi bi-check-circle-fill fs-3 text-success me-3"></i>
                                 <div>
-                                    <h6 class="fw-bold mb-1 text-dark">Â¡Local Verificado y Aprobado por la UTA!</h6>
-                                    <p class="mb-0 small text-muted">Tu establecimiento estÃ¡ activo y visible para toda la comunidad universitaria.</p>
+                                    <h6 class="fw-bold mb-1 text-dark">¡Local Verificado y Aprobado por la UTA!</h6>
+                                    <p class="mb-0 small text-muted">Tu establecimiento está activo y visible para toda la comunidad universitaria.</p>
                                 </div>
                             </div>
                         }
@@ -57,7 +57,7 @@ else
                             <div class="alert alert-danger border-danger mb-4 rounded-3 p-3" role="alert">
                                 <div class="d-flex align-items-center mb-2">
                                     <i class="bi bi-exclamation-triangle-fill fs-4 text-danger me-2"></i>
-                                    <h6 class="fw-bold mb-0 text-danger">AtenciÃ³n: Local Suspendido / Rechazado</h6>
+                                    <h6 class="fw-bold mb-0 text-danger">Atención: Local Suspendido / Rechazado</h6>
                                 </div>
                                 <div class="bg-white p-2 rounded border border-danger border-opacity-25 small mb-2 text-danger fw-semibold">
                                     <strong>Motivo indicado:</strong> @modelo.MotivoRechazo
@@ -102,18 +102,18 @@ else
                         <div class="row g-3 mb-3">
                             <div class="col-md-8">
                                 <label class="form-label fw-bold small text-dark">Nombre del Establecimiento</label>
-                                <InputText class="form-control" @bind-Value="modelo.Nombre" @bind-Value:after="Revalidar" placeholder="Ej: Comedor DoÃ±a Carmen" />
+                                <InputText class="form-control" @bind-Value="modelo.Nombre" @bind-Value:after="Revalidar" placeholder="Ej: Comedor Doña Carmen" />
                                 <ValidationMessage For="() => modelo.Nombre" class="text-danger small" />
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label fw-bold small text-dark">CategorÃ­a GastronÃ³mica</label>
+                                <label class="form-label fw-bold small text-dark">Categoría Gastronómica</label>
                                 <InputSelect class="form-select" @bind-Value="modelo.Categoria" @bind-Value:after="Revalidar">
                                     <option value="@CategoriaLocalModel.Almuerzos">Almuerzos</option>
-                                    <option value="@CategoriaLocalModel.ComidaRapida">Comida RÃ¡pida</option>
-                                    <option value="@CategoriaLocalModel.Cafeteria">CafeterÃ­a</option>
-                                    <option value="@CategoriaLocalModel.Pizzeria">PizzerÃ­a</option>
-                                    <option value="@CategoriaLocalModel.Panaderia">PanaderÃ­a</option>
+                                    <option value="@CategoriaLocalModel.ComidaRapida">Comida Rápida</option>
+                                    <option value="@CategoriaLocalModel.Cafeteria">Cafetería</option>
+                                    <option value="@CategoriaLocalModel.Pizzeria">Pizzería</option>
+                                    <option value="@CategoriaLocalModel.Panaderia">Panadería</option>
                                     <option value="@CategoriaLocalModel.Asadero">Asadero</option>
                                     <option value="@CategoriaLocalModel.VegetarianoVegano">Vegetariano / Vegano</option>
                                     <option value="@CategoriaLocalModel.Otro">Otro</option>
@@ -121,12 +121,12 @@ else
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label fw-bold small text-dark">DescripciÃ³n o Especialidad</label>
-                                <InputTextArea class="form-control" rows="2" @bind-Value="modelo.Descripcion" @bind-Value:after="Revalidar" placeholder="Ej: Almuerzos ejecutivos completos con sopa, segundo, jugo y postre. MenÃº econÃ³mico para universitarios." />
+                                <label class="form-label fw-bold small text-dark">Descripción o Especialidad</label>
+                                <InputTextArea class="form-control" rows="2" @bind-Value="modelo.Descripcion" @bind-Value:after="Revalidar" placeholder="Ej: Almuerzos ejecutivos completos con sopa, segundo, jugo y postre. Menú económico para universitarios." />
                             </div>
                         </div>
 
-                        <h5 class="fw-bold mb-3 mt-4 text-dark pb-2 border-bottom">UbicaciÃ³n y Mapa</h5>
+                        <h5 class="fw-bold mb-3 mt-4 text-dark pb-2 border-bottom">Ubicación y Mapa</h5>
                         <div class="row g-3 mb-3">
                             <div class="col-12">
                                 
@@ -139,7 +139,7 @@ else
                                     {
                                         <i class="bi bi-map-fill me-2"></i>
                                     }
-                                    Seleccionar ubicaciÃ³n en el Mapa
+                                    Seleccionar ubicación en el Mapa
                                 </button>
                                 
                                 <InputNumber @bind-Value="modelo.Latitud" hidden />
@@ -148,7 +148,7 @@ else
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-bold small text-dark">DirecciÃ³n EspecÃ­fica *</label>
+                                <label class="form-label fw-bold small text-dark">Dirección Específica *</label>
                                 <InputText class="form-control" @bind-Value="modelo.Direccion" @bind-Value:after="Revalidar" placeholder="Ej: Av. Los Chasquis (Se autocompleta con el mapa)" />
                                 <ValidationMessage For="() => modelo.Direccion" class="text-danger small" />
                             </div>
@@ -162,7 +162,7 @@ else
 <h5 class="fw-bold mb-3 mt-4 text-dark pb-2 border-bottom">Contacto y Horarios</h5>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="form-label fw-bold small text-dark">TelÃ©fono de Contacto</label>
+                                <label class="form-label fw-bold small text-dark">Teléfono de Contacto</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border"><i class="bi bi-telephone-fill"></i></span>
                                     <InputText class="form-control" @bind-Value="modelo.TelefonoContacto" @bind-Value:after="Revalidar" placeholder="0991234567" />
@@ -178,16 +178,21 @@ else
                                 <ValidationMessage For="() => modelo.WhatsApp" class="text-danger small mt-1 fw-semibold" />
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label fw-bold small text-dark">Horario de AtenciÃ³n</label>
-                                <InputText class="form-control" @bind-Value="modelo.HorarioApertura" @bind-Value:after="Revalidar" placeholder="Ej: Lun - Vie: 07:30 a 17:00" />
+                                <label class="form-label fw-bold small text-dark">Horario de Atención</label>
+                                <div class="d-flex align-items-center gap-2">
+        <input type="time" class="form-control" @bind="horaInicio" @bind:event="onchange" @bind:after="ActualizarHorario" min="05:00" max="23:00" />
+        <span class="fw-bold text-muted">hasta</span>
+        <input type="time" class="form-control" @bind="horaFin" @bind:event="onchange" @bind:after="ActualizarHorario" min="05:00" max="23:00" />
+    </div>
+    <small class="text-muted d-block mt-1">Horario coherente sugerido: 05:00 a 23:00.</small>
                             </div>
                         </div>
 
-                        <h5 class="fw-bold mb-3 mt-4 text-dark pb-2 border-bottom">DocumentaciÃ³n y Certificado RUC</h5>
+                        <h5 class="fw-bold mb-3 mt-4 text-dark pb-2 border-bottom">Documentación y Certificado RUC</h5>
                         <div class="row g-3 mb-4">
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-dark">
-                                    Certificado de RUC / RISE emitido por el SRI <span class="text-danger">*</span> <span class="text-muted fw-normal">(Documento PDF, mÃ¡x. 5 MB)</span>
+                                    Certificado de RUC / RISE emitido por el SRI <span class="text-danger">*</span> <span class="text-muted fw-normal">(Documento PDF, máx. 5 MB)</span>
                                 </label>
                                 <InputFile OnChange="SubirCertificadoRuc" accept=".pdf" class="form-control" disabled="@subiendoPdf" />
                                 <ValidationMessage For="() => modelo.CertificadoRucUrl" class="text-danger small mt-1 fw-semibold" />
@@ -223,7 +228,7 @@ else
                                 }
                                 else
                                 {
-                                    <span class="text-white">@(esEdicion ? "Guardar Cambios" : "Registrar y Enviar a RevisiÃ³n")</span>
+                                    <span class="text-white">@(esEdicion ? "Guardar Cambios" : "Registrar y Enviar a Revisión")</span>
                                 }
                             </button>
                         </div>
@@ -244,7 +249,7 @@ else
             <div class="modal-content rounded-4 border-0 shadow">
                 <div class="modal-header bg-primary text-white rounded-top-4">
                     <h5 class="modal-title fw-bold text-white">
-                        <i class="bi bi-map-fill text-white me-2"></i>Selecciona la UbicaciÃ³n
+                        <i class="bi bi-map-fill text-white me-2"></i>Selecciona la Ubicación
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalMapa"></button>
                 </div>
@@ -259,7 +264,7 @@ else
                 <div class="modal-footer bg-light border-top-0 rounded-bottom-4">
                     <button type="button" class="btn btn-secondary px-4 fw-bold" @onclick="CerrarModalMapa">Cancelar</button>
                     <button type="button" class="btn btn-primary px-4 fw-bold" @onclick="ConfirmarUbicacion">
-                        Confirmar UbicaciÃ³n
+                        Confirmar Ubicación
                     </button>
                 </div>
             </div>
@@ -304,7 +309,7 @@ else
         }
         catch (Exception ex)
         {
-            NotificationService.ShowError("No se pudo obtener tu ubicaciÃ³n automÃ¡tica. Arrastra el pin en el mapa.");
+            NotificationService.ShowError("No se pudo obtener tu ubicación automática. Arrastra el pin en el mapa.");
         }
 
         cargandoGps = false;
@@ -364,6 +369,19 @@ else
         Revalidar();
     }
 
+    private TimeOnly horaInicio = new TimeOnly(7, 30);
+    private TimeOnly horaFin = new TimeOnly(18, 0);
+
+    private void ActualizarHorario()
+    {
+        if (horaInicio >= horaFin)
+        {
+            horaFin = horaInicio.AddHours(1);
+        }
+        modelo.HorarioApertura = $"{horaInicio:HH\\:mm} - {horaFin:HH\\:mm}";
+        Revalidar();
+    }
+
     private bool cargando = true;
     private bool guardando = false;
     private bool subiendoPdf = false;
@@ -414,6 +432,28 @@ else
             }
         }
 
+        if (!string.IsNullOrEmpty(local.HorarioApertura))
+        {
+            var parts = local.HorarioApertura.Split(new[] { " - ", " a ", "a" }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 2)
+            {
+                if (TimeOnly.TryParse(parts[0].Trim(), out var parsedInicio)) horaInicio = parsedInicio;
+                if (TimeOnly.TryParse(parts[1].Trim(), out var parsedFin)) horaFin = parsedFin;
+            }
+        }
+        ActualizarHorario();
+
+        if (!string.IsNullOrEmpty(local.HorarioApertura))
+        {
+            var parts = local.HorarioApertura.Split(new[] { " - ", " a ", "a" }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 2)
+            {
+                if (TimeOnly.TryParse(parts[0].Trim(), out var parsedInicio)) horaInicio = parsedInicio;
+                if (TimeOnly.TryParse(parts[1].Trim(), out var parsedFin)) horaFin = parsedFin;
+            }
+        }
+        ActualizarHorario();
+
         editContext = new EditContext(modelo);
         editContext.OnFieldChanged += (s, e) => StateHasChanged();
 
@@ -463,7 +503,7 @@ else
             }
             else
             {
-                NotificationService.ShowError(msg ?? "OcurriÃ³ un error al subir la foto.");
+                NotificationService.ShowError(msg ?? "Ocurrió un error al subir la foto.");
             }
         }
         catch (Exception ex)
@@ -484,7 +524,7 @@ private async Task SubirCertificadoRuc(InputFileChangeEventArgs e)
 
         if (!archivo.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
         {
-            NotificationService.ShowError("Por favor, sube Ãºnicamente archivos en formato PDF.");
+            NotificationService.ShowError("Por favor, sube únicamente archivos en formato PDF.");
             return;
         }
 
@@ -545,13 +585,13 @@ private async Task SubirCertificadoRuc(InputFileChangeEventArgs e)
             else
                 modelo.CampusCercano = CampusUTAModel.Querochaca;
 
-            NotificationService.ShowSuccess("UbicaciÃ³n GPS capturada correctamente.");
+            NotificationService.ShowSuccess("Ubicación GPS capturada correctamente.");
             Revalidar();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"No se pudo obtener la ubicaciÃ³n: {ex.Message}");
-            NotificationService.ShowError("No pudimos acceder a tu GPS. AsegÃºrate de darle permisos al navegador.");
+            Console.WriteLine($"No se pudo obtener la ubicación: {ex.Message}");
+            NotificationService.ShowError("No pudimos acceder a tu GPS. Asegúrate de darle permisos al navegador.");
         }
     }
 
@@ -563,7 +603,7 @@ private async Task SubirCertificadoRuc(InputFileChangeEventArgs e)
             return;
         }
 
-        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", "Â¿EstÃ¡s seguro de que deseas guardar los cambios en tu local?");
+        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", "¿Estás seguro de que deseas guardar los cambios en tu local?");
         if (!confirmed) return;
 
         guardando = true;
@@ -573,7 +613,7 @@ private async Task SubirCertificadoRuc(InputFileChangeEventArgs e)
             var (exito, _, msg) = await LocalService.UpdateAsync(modelo);
             if (exito)
             {
-                NotificationService.ShowSuccess("Los datos de tu local se actualizaron con Ã©xito.");
+                NotificationService.ShowSuccess("Los datos de tu local se actualizaron con éxito.");
             }
             else
             {
@@ -588,7 +628,7 @@ private async Task SubirCertificadoRuc(InputFileChangeEventArgs e)
                 esEdicion = true;
                 modelo.Id = creado.Id;
                 modelo.EstadoAprobacion = creado.EstadoAprobacion;
-                NotificationService.ShowSuccess("Â¡Â¡Tu local ha sido registrado exitosamente! EstÃ¡ en revisiÃ³n por un administrador.");
+                NotificationService.ShowSuccess("¡¡Tu local ha sido registrado exitosamente! Está en revisión por un administrador.");
             }
             else
             {
@@ -605,3 +645,7 @@ private async Task SubirCertificadoRuc(InputFileChangeEventArgs e)
         public double Longitud { get; set; }
     }
 }
+
+
+
+

@@ -158,14 +158,11 @@
 
 
                         <div class="input-group">
-
-
                             <span class="input-group-text bg-light text-secondary border-secondary border-opacity-50"><i class="bi bi-lock-fill"></i></span>
-
-
-                            <InputText type="password" class="form-control text-dark fw-medium border-secondary border-opacity-50" @bind-Value="loginModel.Password" @bind-Value:after="RevalidarLogin" placeholder="••••••••" />
-
-
+                            <InputText type="@(showPassword ? "text" : "password")" class="form-control text-dark fw-medium border-secondary border-opacity-50" @bind-Value="loginModel.Password" @bind-Value:after="RevalidarLogin" placeholder="********" />
+                            <span class="input-group-text bg-light text-secondary border-secondary border-opacity-50" style="cursor: pointer" @onclick="() => showPassword = !showPassword">
+                                <i class="bi @(showPassword ? "bi-eye-slash-fill" : "bi-eye-fill")"></i>
+                            </span>
                         </div>
 
 
@@ -292,10 +289,16 @@
                     <div class="mb-4">
 
 
-                        <label class="form-label fw-bold small text-dark d-flex justify-content-between w-100"><span>Contraseña</span><a href="/forgot-password" class="text-decoration-none text-uta-blue">¿Olvidaste tu contraseña?</a></label>
+                        <label class="form-label fw-bold small text-dark">Contraseña</label>
 
 
-                        <InputText type="password" class="form-control text-dark fw-medium border-secondary border-opacity-50" @bind-Value="registerModel.Password" @bind-Value:after="RevalidarRegistro" placeholder="••••••••" />
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-secondary border-secondary border-opacity-50"><i class="bi bi-lock-fill"></i></span>
+                            <InputText type="@(showRegisterPassword ? "text" : "password")" class="form-control text-dark fw-medium border-secondary border-opacity-50" @bind-Value="registerModel.Password" @bind-Value:after="RevalidarRegistro" placeholder="********" />
+                            <span class="input-group-text bg-light text-secondary border-secondary border-opacity-50" style="cursor: pointer" @onclick="() => showRegisterPassword = !showRegisterPassword">
+                                <i class="bi @(showRegisterPassword ? "bi-eye-slash-fill" : "bi-eye-fill")"></i>
+                            </span>
+                        </div>
 
 
                         <ValidationMessage For="() => registerModel.Password" class="text-danger small mt-1 fw-semibold" />
@@ -431,6 +434,8 @@
 
 
 @code {
+    private bool showPassword = false;
+    private bool showRegisterPassword = false;
 
 
     private bool isLogin = true;
@@ -635,5 +640,8 @@
 
 
 }
+
+
+
 
 

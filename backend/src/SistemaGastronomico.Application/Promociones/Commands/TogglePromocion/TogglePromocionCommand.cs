@@ -27,6 +27,19 @@ public class TogglePromocionCommandHandler : IRequestHandler<TogglePromocionComm
         }
 
         promo.EstaActiva = !promo.EstaActiva;
+        
+        if (promo.EstaActiva)
+        {
+            var now = DateTime.UtcNow;
+            if (promo.FechaFin < now)
+            {
+                var duration = promo.FechaFin - promo.FechaInicio;
+                if (duration.TotalDays < 1) duration = TimeSpan.FromDays(7);
+                promo.FechaInicio = now;
+                promo.FechaFin = now.Add(duration);
+            }
+        }
+
         promo.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
