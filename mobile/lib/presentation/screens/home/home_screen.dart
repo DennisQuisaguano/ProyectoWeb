@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/theme/smooth_page_route.dart';
+import '../../../data/models/local_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/local_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/promocion_provider.dart';
 import '../../../shared/widgets/puni_mascot.dart';
 import '../../widgets/empty_state_view.dart';
-import '../../widgets/filter_bottom_sheet.dart';
 import '../../widgets/local_card.dart';
 import '../../widgets/promotion_card.dart';
 import '../../widgets/skeleton_card.dart';
@@ -24,8 +26,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
@@ -34,31 +34,39 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadData() async {
     final location = context.read<LocationProvider>();
     final localProvider = context.read<LocalProvider>();
     final promoProvider = context.read<PromocionProvider>();
 
-    await location.initLocation();
-    await localProvider.initFavorites();
+    // 1. Cargar campus guardado y favoritos de SharedPreferences inmediatamente (<5ms)
+    await Future.wait([
+      location.initLocation(waitForGps: false),
+      localProvider.initFavorites(),
+    ]);
 
+    final campusId = location.selectedCampusId;
     final userLat = location.referenceLatitude;
     final userLng = location.referenceLongitude;
 
-    await Future.wait([
+    // 2. Disparar peticiones HTTP de locales y promociones de inmediato en paralelo
+    final fetchFuture = Future.wait([
       localProvider.fetchLocales(
-        campus: location.selectedCampusId,
+        campus: campusId,
         userLat: userLat,
         userLng: userLng,
       ),
-      promoProvider.fetchGlobalPromotions(campus: location.selectedCampusId),
+      promoProvider.fetchGlobalPromotions(campus: campusId),
     ]);
+
+    // 3. Obtener GPS en segundo plano y refrescar distancias cuando responda el sensor
+    location.fetchUserLocation().then((pos) {
+      if (pos != null && mounted) {
+        localProvider.updateDistances(pos.latitude, pos.longitude);
+      }
+    });
+
+    await fetchFuture;
   }
 
   void _onCampusChanged(int campusId) async {
@@ -236,75 +244,81 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Barra de búsqueda y Filtros Soft UI
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: isDark ? AppColors.darkSurface : AppColors.background,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
-                              ),
-                              child: TextField(
-                                controller: _searchController,
-                                onChanged: (val) => local.setSearchQuery(val),
-                                style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
-                                decoration: InputDecoration(
-                                  hintText: 'Buscar hamburguesas, almuerzos...',
-                                  hintStyle: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : AppColors.textMuted),
-                                  prefixIcon: Icon(Icons.search_rounded, color: isDark ? AppColors.accentBlue : AppColors.primary, size: 22),
-                                  suffixIcon: _searchController.text.isNotEmpty
-                                      ? IconButton(
-                                          icon: Icon(Icons.close_rounded, size: 18, color: isDark ? AppColors.darkTextSecondary : AppColors.textMuted),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                            local.setSearchQuery('');
-                                          },
-                                        )
-                                      : null,
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 13),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Container(
+                      // Buscador Rápido interactivo que abre directamente la pestaña de Búsqueda completa
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            widget.onNavigateTab?.call(2); // Navega al tab Buscar
+                          },
+                          child: Ink(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                             decoration: BoxDecoration(
-                              color: (local.filterCategoria != null ||
-                                      local.filterSoloAbiertos ||
-                                      local.filterPresupuestoMax != null ||
-                                      local.filterSoloComidaRapida)
-                                  ? AppColors.primary
-                                  : (isDark ? AppColors.darkSurface : AppColors.background),
+                              color: isDark ? AppColors.darkSurface : AppColors.background,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: (local.filterCategoria != null ||
-                                        local.filterSoloAbiertos ||
-                                        local.filterPresupuestoMax != null ||
-                                        local.filterSoloComidaRapida)
-                                    ? AppColors.primary
-                                    : (isDark ? AppColors.darkBorder : AppColors.border),
+                                color: isDark ? AppColors.darkBorder : AppColors.border,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isDark ? Colors.black26 : Colors.black.withOpacity(0.04),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.tune_rounded,
-                                size: 20,
-                                color: (local.filterCategoria != null ||
-                                        local.filterSoloAbiertos ||
-                                        local.filterPresupuestoMax != null ||
-                                        local.filterSoloComidaRapida)
-                                    ? Colors.white
-                                    : (isDark ? AppColors.accentBlue : AppColors.primary),
-                              ),
-                              onPressed: () => FilterBottomSheet.show(context, local),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.search_rounded,
+                                  color: isDark ? AppColors.accentBlue : AppColors.primary,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Buscar platos, almuerzos, locales...',
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      color: isDark ? AppColors.darkTextSecondary : AppColors.textMuted,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? AppColors.primarySubtle.withOpacity(0.15) : AppColors.primarySubtle,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.tune_rounded,
+                                        size: 14,
+                                        color: isDark ? AppColors.accentBlue : AppColors.primary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Filtros',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? AppColors.accentBlue : AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
@@ -452,10 +466,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             isCompact: true,
                             onTap: () {
                               promo.registrarClickPromocion(p.localId, p.titulo);
+                              final localMatch = local.locales.cast<LocalModel?>().firstWhere(
+                                (item) => item?.id == p.localId,
+                                orElse: () => null,
+                              );
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (_) => LocalDetailScreen(localId: p.localId),
+                                SmoothPageRoute(
+                                  page: LocalDetailScreen(localId: p.localId, initialLocal: localMatch),
                                 ),
                               );
                             },
@@ -468,9 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
 
               // 5. Sección: Recomendado para ti (Puni sugiere)
-              if (local.recommendedLocales.isNotEmpty &&
-                  local.filterCategoria == null &&
-                  _searchController.text.isEmpty) ...[
+              if (local.recommendedLocales.isNotEmpty && local.filterCategoria == null) ...[
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
@@ -520,7 +536,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => LocalDetailScreen(localId: l.id)),
+                              SmoothPageRoute(
+                                page: LocalDetailScreen(localId: l.id, initialLocal: l),
+                              ),
                             );
                           },
                         );
@@ -570,10 +588,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: EmptyStateView(
                     puniMood: PuniMood.confused,
                     title: 'Puni está buscando...',
-                    message: 'No encontramos locales con esos filtros en tu campus.\nPrueba cambiando tu búsqueda o seleccionando otra categoría.',
+                    message: 'No encontramos locales con esos filtros en tu campus.\nPrueba cambiando de categoría.',
                     buttonText: 'Restablecer filtros',
                     onRetry: () {
-                      _searchController.clear();
                       local.resetFilters();
                     },
                   ),
@@ -592,7 +609,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => LocalDetailScreen(localId: l.id)),
+                              SmoothPageRoute(
+                                page: LocalDetailScreen(localId: l.id, initialLocal: l),
+                              ),
                             );
                           },
                         );

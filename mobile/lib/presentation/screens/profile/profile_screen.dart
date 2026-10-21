@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/theme/smooth_page_route.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/local_provider.dart';
 import '../../providers/location_provider.dart';
@@ -292,7 +293,7 @@ class ProfileScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => LocalDetailScreen(localId: l.id)),
+                      SmoothPageRoute(page: LocalDetailScreen(localId: l.id, initialLocal: l)),
                     );
                   },
                 );

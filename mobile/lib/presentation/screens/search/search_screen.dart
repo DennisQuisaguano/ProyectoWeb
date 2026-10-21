@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/smooth_page_route.dart';
+import '../../../data/models/local_model.dart';
 import '../../providers/local_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/menu_provider.dart';
@@ -37,6 +39,9 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _executeSearch('');
+    });
   }
 
   @override
@@ -53,9 +58,10 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
 
     localProvider.setSearchQuery(query);
 
+    // Si query está vacío y no hay presupuesto forzado, traemos todos los platos disponibles
     menuProvider.searchDishes(
-      query: query,
-      campus: location.selectedCampusId,
+      query: query.trim(),
+      campus: (_selectedBudgetFilter != null || query.trim().isNotEmpty) ? location.selectedCampusId : null,
       precioMaximo: _selectedBudgetFilter,
     );
   }
@@ -103,6 +109,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                   ),
                   child: TextField(
                     controller: _searchController,
+                    onChanged: _executeSearch,
                     onSubmitted: _executeSearch,
                     textInputAction: TextInputAction.search,
                     style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
@@ -257,9 +264,16 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
         return DishCard(
           plato: p,
           onTapLocal: () {
+            final localProv = context.read<LocalProvider>();
+            final localMatch = localProv.locales.cast<LocalModel?>().firstWhere(
+              (item) => item?.id == p.localId,
+              orElse: () => null,
+            );
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => LocalDetailScreen(localId: p.localId)),
+              SmoothPageRoute(
+                page: LocalDetailScreen(localId: p.localId, initialLocal: localMatch),
+              ),
             );
           },
         );
@@ -288,7 +302,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => LocalDetailScreen(localId: l.id)),
+              SmoothPageRoute(page: LocalDetailScreen(localId: l.id, initialLocal: l)),
             );
           },
         );

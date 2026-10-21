@@ -20,6 +20,7 @@ public class GetLocalByIdQueryHandler : IRequestHandler<GetLocalByIdQuery, Local
     {
         var local = await _context.Locales
             .Include(l => l.Propietario)
+            .Include(l => l.Resenas)
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == request.Id && l.IsActive, cancellationToken);
 
@@ -27,6 +28,12 @@ public class GetLocalByIdQueryHandler : IRequestHandler<GetLocalByIdQuery, Local
         {
             throw new NotFoundException("Local", request.Id);
         }
+
+        var validResenas = local.Resenas.Where(r => r.IsActive).ToList();
+        var totalResenas = validResenas.Count;
+        var calificacionPromedio = totalResenas > 0
+            ? Math.Round(validResenas.Average(r => r.Calificacion), 1)
+            : 0.0;
 
         return new LocalDto(
             local.Id,
@@ -49,7 +56,9 @@ public class GetLocalByIdQueryHandler : IRequestHandler<GetLocalByIdQuery, Local
             local.EstadoAprobacion,
             local.CertificadoRucUrl,
             local.MotivoRechazo,
-            local.Propietario?.Email
+            local.Propietario?.Email,
+            calificacionPromedio,
+            totalResenas
         );
     }
 }

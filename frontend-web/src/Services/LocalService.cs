@@ -204,4 +204,31 @@ public class LocalService
             return (false, null, ex.Message);
         }
     }
+
+    public async Task<List<ResenaDetalleModel>> GetMisResenasAsync()
+    {
+        try
+        {
+            var result = await _httpClient.GetFromJsonAsync<List<ResenaDetalleModel>>("api/locales/mis-resenas");
+            return result ?? new List<ResenaDetalleModel>();
+        }
+        catch
+        {
+            return new List<ResenaDetalleModel>();
+        }
+    }
+
+    public async Task<List<ResenaDetalleModel>> GetResenasByLocalAsync(Guid localId)
+    {
+        try
+        {
+            var result = await _httpClient.GetFromJsonAsync<List<ResenaDetalleModel>>($"api/locales/{localId}/resenas");
+            return result ?? new List<ResenaDetalleModel>();
+        }
+        catch
+        {
+            return new List<ResenaDetalleModel>();
+        }
+    }
 }
+

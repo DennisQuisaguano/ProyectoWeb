@@ -22,21 +22,28 @@ public record UpdatePromocionCommand(
 public class UpdatePromocionCommandHandler : IRequestHandler<UpdatePromocionCommand, PromocionDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly INotificacionService _notificacionService;
 
-    public UpdatePromocionCommandHandler(IApplicationDbContext context)
+    public UpdatePromocionCommandHandler(IApplicationDbContext context, INotificacionService notificacionService)
     {
         _context = context;
+        _notificacionService = notificacionService;
     }
 
     public async Task<PromocionDto> Handle(UpdatePromocionCommand request, CancellationToken cancellationToken)
     {
         var promocion = await _context.Promociones
+            .Include(p => p.Local)
             .FirstOrDefaultAsync(p => p.Id == request.Id && p.LocalId == request.LocalId, cancellationToken);
 
         if (promocion == null)
         {
             throw new NotFoundException("Promocion", request.Id);
         }
+
+        var oldFechaInicio = promocion.FechaInicio;
+        var oldDiasValidos = promocion.DiasValidos;
+        var oldPrecio = promocion.PrecioPromocional;
 
         promocion.Titulo = request.Titulo;
         promocion.Descripcion = request.Descripcion;
@@ -50,6 +57,19 @@ public class UpdatePromocionCommandHandler : IRequestHandler<UpdatePromocionComm
         promocion.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Notificar a los estudiantes si la oferta se actualizó (cambio de fecha, día o precio)
+        try
+        {
+            var nombreLocal = promocion.Local?.Nombre ?? "un local de la UTA";
+            var precioTexto = $"${promocion.PrecioPromocional:F2}";
+            var mensaje = $"¡Oferta actualizada en {nombreLocal}! {promocion.Titulo} por {precioTexto}. Válida ahora.";
+            await _notificacionService.NotificarEstudiantesAsync("promocion", mensaje, cancellationToken);
+        }
+        catch
+        {
+            // La notificación no bloquea la actualización
+        }
 
         return new PromocionDto(
             promocion.Id,

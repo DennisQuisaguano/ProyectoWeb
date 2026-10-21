@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/smooth_page_route.dart';
+import '../../../data/models/local_model.dart';
+import '../../providers/local_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/promocion_provider.dart';
 import '../../widgets/empty_state_view.dart';
@@ -79,10 +82,14 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                         promocion: p,
                         onTap: () {
                           promo.registrarClickPromocion(p.localId, p.titulo);
+                          final localMatch = context.read<LocalProvider>().locales.cast<LocalModel?>().firstWhere(
+                            (l) => l?.id == p.localId,
+                            orElse: () => null,
+                          );
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) => LocalDetailScreen(localId: p.localId),
+                            SmoothPageRoute(
+                              page: LocalDetailScreen(localId: p.localId, initialLocal: localMatch),
                             ),
                           );
                         },

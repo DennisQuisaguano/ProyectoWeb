@@ -7,9 +7,23 @@ using SistemaGastronomico.Application.Promociones.Commands.CreatePromocion;
 using SistemaGastronomico.Application.Promociones.Commands.UpdatePromocion;
 using SistemaGastronomico.Application.Promociones.Commands.TogglePromocion;
 using SistemaGastronomico.Application.Promociones.Queries.GetPromocionesByLocal;
+using SistemaGastronomico.Application.Promociones.Queries.GetPromocionesGlobales;
+using SistemaGastronomico.Domain.Enums;
 
 public class PromocionesController : ApiControllerBase
 {
+    /// <summary>
+    /// Lista las promociones vigentes de forma global, filtrando opcionalmente por campus.
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<List<PromocionGlobalDto>>> GetAll(
+        [FromQuery] CampusUTA? campus,
+        [FromQuery] bool? soloActivas = true)
+    {
+        var result = await Mediator.Send(new GetPromocionesGlobalesQuery(campus, soloActivas));
+        return Ok(result);
+    }
+
     [HttpGet("local/{localId:guid}")]
     public async Task<ActionResult<List<PromocionDto>>> GetByLocal(Guid localId, [FromQuery] bool? soloActivas)
     {

@@ -23,5 +23,7 @@ public record LocalDto(
     EstadoAprobacionLocal EstadoAprobacion = EstadoAprobacionLocal.Pendiente,
     string? CertificadoRucUrl = null,
     string? MotivoRechazo = null,
-    string? PropietarioEmail = null
+    string? PropietarioEmail = null,
+    double CalificacionPromedio = 0.0,
+    int TotalResenas = 0
 );

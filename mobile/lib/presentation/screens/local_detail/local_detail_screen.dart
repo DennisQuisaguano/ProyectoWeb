@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../data/models/local_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/local_provider.dart';
 import '../../providers/location_provider.dart';
@@ -10,7 +12,7 @@ import '../../providers/menu_provider.dart';
 import '../../providers/promocion_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/dish_card.dart';
-import '../../widgets/loading_screen_view.dart';
+import '../../widgets/in_app_route_modal.dart';
 import '../../widgets/promotion_card.dart';
 import '../../widgets/star_rating_display.dart';
 import '../../../shared/widgets/puni_mascot.dart';
@@ -18,8 +20,13 @@ import '../auth/login_screen.dart';
 
 class LocalDetailScreen extends StatefulWidget {
   final String localId;
+  final LocalModel? initialLocal;
 
-  const LocalDetailScreen({super.key, required this.localId});
+  const LocalDetailScreen({
+    super.key,
+    required this.localId,
+    this.initialLocal,
+  });
 
   @override
   State<LocalDetailScreen> createState() => _LocalDetailScreenState();
@@ -32,8 +39,11 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadDetails();
+    // Esperar a que concluya la transición de entrada para asegurar 120 FPS sin bloqueos en el hilo principal
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (mounted) {
+        _loadDetails();
+      }
     });
   }
 
@@ -129,6 +139,17 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
         );
       }
     }
+  }
+
+  void _showRouteModal(BuildContext context, LocalModel local, double userLat, double userLng) {
+    HapticFeedback.lightImpact();
+    InAppRouteModal.show(
+      context: context,
+      userPoint: LatLng(userLat, userLng),
+      localPoint: LatLng(local.latitud, local.longitud),
+      localNombre: local.nombre,
+      categoriaIcono: local.categoriaIcono,
+    );
   }
 
   void _showAddReviewDialog() {
@@ -323,15 +344,32 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
     final menuProv = context.watch<MenuProvider>();
     final promoProv = context.watch<PromocionProvider>();
 
-    final local = localProv.selectedLocal;
+    // 1. Obtener datos del local de inmediato (cache del provider, parámetro o selectedLocal)
+    final LocalModel? maybeLocal = (localProv.selectedLocal != null && localProv.selectedLocal!.id == widget.localId)
+        ? localProv.selectedLocal
+        : (widget.initialLocal != null && widget.initialLocal!.id == widget.localId)
+            ? widget.initialLocal
+            : localProv.locales.cast<LocalModel?>().firstWhere(
+                (l) => l?.id == widget.localId,
+                orElse: () => null,
+              );
 
-    if (localProv.isLoadingDetail || local == null) {
-      return const LoadingScreenView(
-        fullScreen: true,
-        title: 'Cargando restaurante...',
-        subtitle: 'Consultando menús, ofertas y ubicación en el campus',
+    // 2. Si no existe en memoria ni cache, mostrar skeleton nativo y sutil (sin parpadeos de mascota)
+    if (maybeLocal == null) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.primary),
+        ),
       );
     }
+
+    final local = maybeLocal;
 
     final isFav = localProv.favoriteIds.contains(local.id);
     final theme = Theme.of(context);
@@ -419,18 +457,29 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 6),
                                 Row(
                                   children: [
                                     StarRatingDisplay(
                                       rating: local.calificacionPromedio,
                                       totalReviews: local.totalResenas,
+                                      starSize: 15,
                                       showNumber: true,
+                                      textColor: Colors.white,
+                                      countColor: const Color(0xFFFDE68A),
+                                      asBadge: true,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       '• ${local.categoriaNombre}',
-                                      style: const TextStyle(color: Colors.white70, fontSize: 13),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        shadows: [
+                                          Shadow(color: Colors.black54, blurRadius: 4),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -499,10 +548,90 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
                         ],
                       ],
                     ),
-                    const SizedBox(height: 10),
+
+                    // Tarjeta destacada de Reputación y Reseñas (Ultra Legible y Clara)
+                    Container(
+                      margin: const EdgeInsets.only(top: 12, bottom: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurface : const Color(0xFFFEF3C7).withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark ? AppColors.darkBorder : const Color(0xFFFCD34D),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star_rounded, size: 16, color: Colors.white),
+                                const SizedBox(width: 3),
+                                Text(
+                                  local.calificacionPromedio > 0 ? local.calificacionPromedio.toStringAsFixed(1) : 'Nuevo',
+                                  style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  local.calificacionPromedio > 0
+                                      ? '${local.calificacionPromedio.toStringAsFixed(1)} de 5 estrellas'
+                                      : 'Sin calificaciones aún',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.5,
+                                    color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  local.totalResenas > 0
+                                      ? '${local.totalResenas} opiniones de la comunidad UTA'
+                                      : 'Sé el primero en calificar este local',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              _tabController.animateTo(2);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                              child: Text(
+                                'Ver todas →',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? AppColors.accentBlue : AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                     // Descripción
-                    if (local.descripcion.isNotEmpty)
+                    if (local.descripcion.isNotEmpty) ...[
+                      const SizedBox(height: 10),
                       Text(
                         local.descripcion,
                         style: TextStyle(
@@ -511,43 +640,86 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
                           height: 1.4,
                         ),
                       ),
-                    const SizedBox(height: 12),
+                    ],
 
-                    // Ubicación / Dirección
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            '${local.direccion}${local.referencia != null ? ' (${local.referencia})' : ''}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    if (local.horarioApertura != null && local.horarioApertura!.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Row(
+                    // Tarjeta de Ubicación & Cómo llegar (Ruta con mapa interactivo)
+                    Container(
+                      margin: const EdgeInsets.only(top: 12, bottom: 14),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurface : AppColors.chipBackground,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.access_time_rounded, size: 16, color: isDark ? AppColors.darkTextSecondary : AppColors.textMuted),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Horario: ${local.horarioApertura}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.location_on_rounded, size: 20, color: AppColors.primary),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${local.direccion}${local.referencia != null ? ' (${local.referencia})' : ''}',
+                                      style: TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    if (local.horarioApertura != null && local.horarioApertura!.isNotEmpty) ...[
+                                      const SizedBox(height: 3),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.access_time_rounded, size: 14, color: isDark ? AppColors.darkTextSecondary : AppColors.textMuted),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Horario: ${local.horarioApertura}',
+                                            style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Botón interactivo "Ver Mapa & Cómo llegar (Ruta)"
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.map_rounded, size: 18),
+                              label: const Text(
+                                '📍 Ver Mapa & Cómo llegar (Ruta)',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: isDark ? AppColors.accentBlue : AppColors.primary,
+                                side: BorderSide(color: isDark ? AppColors.accentBlue : AppColors.primary, width: 1.5),
+                                backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 11),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () {
+                                final loc = context.read<LocationProvider>();
+                                _showRouteModal(
+                                  context,
+                                  local,
+                                  loc.currentPosition?.latitude ?? loc.referenceLatitude,
+                                  loc.currentPosition?.longitude ?? loc.referenceLongitude,
+                                );
+                              },
                             ),
                           ),
                         ],
                       ),
-                    ],
-                    const SizedBox(height: 14),
+                    ),
 
                     // Botones de acción rápida: WhatsApp y Llamar (Touch Target >= 48dp)
                     Row(

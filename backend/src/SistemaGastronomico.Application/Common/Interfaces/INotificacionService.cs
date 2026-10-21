@@ -4,4 +4,5 @@ public interface INotificacionService
 {
     Task SendNotificacionAsync(Guid usuarioId, string tipo, string mensaje, CancellationToken cancellationToken = default);
     Task NotificarAdminsAsync(string tipo, string mensaje, CancellationToken cancellationToken = default);
+    Task NotificarEstudiantesAsync(string tipo, string mensaje, CancellationToken cancellationToken = default);
 }

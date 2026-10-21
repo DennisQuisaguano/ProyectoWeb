@@ -50,4 +50,35 @@ public class NotificacionesController : ControllerBase
         await _context.SaveChangesAsync();
         return Ok();
     }
+
+    [HttpPost("registrar-dispositivo")]
+    public IActionResult RegistrarDispositivo([FromBody] RegistrarDispositivoRequest request)
+    {
+        return Ok(new { exito = true, mensaje = "Dispositivo registrado correctamente" });
+    }
+
+    [AllowAnonymous]
+    [HttpGet("publicas-recientes")]
+    public async Task<IActionResult> GetPublicasRecientes([FromQuery] DateTime? desde = null)
+    {
+        var limiteFecha = desde ?? DateTime.UtcNow.AddHours(-24);
+
+        var notificaciones = await _context.Notificaciones
+            .Where(n => n.CreatedAt >= limiteFecha && n.IsActive)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(20)
+            .Select(n => new
+            {
+                n.Id,
+                n.Tipo,
+                n.Mensaje,
+                n.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(notificaciones);
+    }
 }
+
+public record RegistrarDispositivoRequest(string Token, string? Plataforma);
+

@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/smooth_page_route.dart';
 import '../../../data/models/local_model.dart';
 import '../../providers/local_provider.dart';
 import '../../providers/location_provider.dart';
@@ -443,7 +444,7 @@ class _MapScreenState extends State<MapScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => LocalDetailScreen(localId: l.id)),
+                  SmoothPageRoute(page: LocalDetailScreen(localId: l.id, initialLocal: l)),
                 );
               },
               style: ElevatedButton.styleFrom(

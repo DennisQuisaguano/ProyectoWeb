@@ -10,6 +10,10 @@ using SistemaGastronomico.Application.Locales.Commands.UpdateLocal;
 using SistemaGastronomico.Application.Locales.Queries.GetLocalById;
 using SistemaGastronomico.Application.Locales.Queries.GetLocales;
 using SistemaGastronomico.Application.Locales.Queries.GetLocalesByPropietario;
+using SistemaGastronomico.Application.Admin;
+using SistemaGastronomico.Application.Admin.Queries.GetResenasByLocal;
+using SistemaGastronomico.Application.Locales.Queries.GetResenasByPropietario;
+using SistemaGastronomico.Application.Resenas.Commands.CreateResena;
 using SistemaGastronomico.Domain.Enums;
 
 public class LocalesController : ApiControllerBase
@@ -118,6 +122,52 @@ public class LocalesController : ApiControllerBase
         var result = await Mediator.Send(new SistemaGastronomico.Application.Locales.Commands.RechazarLocal.RechazarLocalCommand(id, adminId, request.Motivo));
         return Ok(result);
     }
+
+    /// <summary>
+    /// Consulta las opiniones y reseñas dejadas a un local comercial.
+    /// </summary>
+    [HttpGet("{id:guid}/resenas")]
+    public async Task<ActionResult<List<ResenaDetalleDto>>> GetResenas(Guid id)
+    {
+        var result = await Mediator.Send(new GetResenasByLocalQuery(id));
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Registra la reseña y calificación (1 a 5 estrellas) de un estudiante autenticado.
+    /// </summary>
+    [HttpPost("{id:guid}/resenas")]
+    [Authorize]
+    public async Task<ActionResult<ResenaDetalleDto>> CreateResena(Guid id, [FromBody] CrearResenaRequest request)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdStr, out var userId))
+        {
+            return Unauthorized("Usuario no identificado");
+        }
+
+        var command = new CreateResenaCommand(id, userId, request.Calificacion, request.Comentario);
+        var result = await Mediator.Send(command);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Consulta todas las opiniones y reseñas recibidas en los locales del propietario autenticado.
+    /// </summary>
+    [HttpGet("mis-resenas")]
+    [Authorize]
+    public async Task<ActionResult<List<ResenaDetalleDto>>> GetMisResenas()
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdStr, out var userId))
+        {
+            return Unauthorized("Usuario no identificado");
+        }
+
+        var result = await Mediator.Send(new GetResenasByPropietarioQuery(userId));
+        return Ok(result);
+    }
 }
 
 public record RechazarLocalRequest(string Motivo);
+public record CrearResenaRequest(int Calificacion, string? Comentario);

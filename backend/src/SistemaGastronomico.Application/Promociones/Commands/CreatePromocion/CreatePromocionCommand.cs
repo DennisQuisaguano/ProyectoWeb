@@ -55,18 +55,20 @@ public class CreatePromocionCommandValidator : AbstractValidator<CreatePromocion
 public class CreatePromocionCommandHandler : IRequestHandler<CreatePromocionCommand, PromocionDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly INotificacionService _notificacionService;
 
-    public CreatePromocionCommandHandler(IApplicationDbContext context)
+    public CreatePromocionCommandHandler(IApplicationDbContext context, INotificacionService notificacionService)
     {
         _context = context;
+        _notificacionService = notificacionService;
     }
 
     public async Task<PromocionDto> Handle(CreatePromocionCommand request, CancellationToken cancellationToken)
     {
-        var localExiste = await _context.Locales
-            .AnyAsync(l => l.Id == request.LocalId && l.IsActive, cancellationToken);
+        var local = await _context.Locales
+            .FirstOrDefaultAsync(l => l.Id == request.LocalId && l.IsActive, cancellationToken);
 
-        if (!localExiste)
+        if (local == null)
         {
             throw new NotFoundException("Local", request.LocalId);
         }
@@ -89,6 +91,18 @@ public class CreatePromocionCommandHandler : IRequestHandler<CreatePromocionComm
 
         _context.Promociones.Add(promo);
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Notificar a todos los estudiantes registrados
+        try
+        {
+            var precioTexto = $"${promo.PrecioPromocional:F2}";
+            var mensaje = $"¡Nueva oferta en {local.Nombre}! {promo.Titulo} por solo {precioTexto}.";
+            await _notificacionService.NotificarEstudiantesAsync("promocion", mensaje, cancellationToken);
+        }
+        catch
+        {
+            // La notificación no debe bloquear la creación de la promoción
+        }
 
         return new PromocionDto(
             promo.Id,

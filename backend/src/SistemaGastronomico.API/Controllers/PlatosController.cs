@@ -9,10 +9,26 @@ using SistemaGastronomico.Application.Menus.Commands.ToggleDisponibilidadPlato;
 using SistemaGastronomico.Application.Menus.Commands.TogglePlatoDelDia;
 using SistemaGastronomico.Application.Menus.Commands.UpdatePlato;
 using SistemaGastronomico.Application.Menus.Queries.GetPlatosByLocal;
+using SistemaGastronomico.Application.Menus.Queries.SearchPlatos;
 using SistemaGastronomico.Domain.Enums;
 
 public class PlatosController : ApiControllerBase
 {
+    /// <summary>
+    /// Busca y filtra platos/productos entre todos los locales disponibles (por texto, campus, categoría o precio).
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<List<PlatoBusquedaDto>>> SearchPlatos(
+        [FromQuery] string? search,
+        [FromQuery] CampusUTA? campus,
+        [FromQuery] CategoriaPlato? categoria,
+        [FromQuery] bool? soloDisponibles = true,
+        [FromQuery] decimal? precioMaximo = null)
+    {
+        var result = await Mediator.Send(new SearchPlatosQuery(search, campus, categoria, soloDisponibles, precioMaximo));
+        return Ok(result);
+    }
+
     [HttpGet("local/{localId:guid}")]
     public async Task<ActionResult<List<PlatoDto>>> GetByLocal(
         Guid localId,

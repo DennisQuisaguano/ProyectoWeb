@@ -43,9 +43,20 @@ public class GetLocalesQueryHandler : IRequestHandler<GetLocalesQuery, List<Loca
             query = query.Where(l => l.Nombre.ToLower().Contains(search) || l.Descripcion.ToLower().Contains(search));
         }
 
-        var locales = await query
+        var localesList = await query
+            .Include(l => l.Resenas)
             .OrderBy(l => l.Nombre)
-            .Select(l => new LocalDto(
+            .ToListAsync(cancellationToken);
+
+        return localesList.Select(l =>
+        {
+            var validResenas = l.Resenas.Where(r => r.IsActive).ToList();
+            var totalResenas = validResenas.Count;
+            var calificacionPromedio = totalResenas > 0
+                ? Math.Round(validResenas.Average(r => r.Calificacion), 1)
+                : 0.0;
+
+            return new LocalDto(
                 l.Id,
                 l.Nombre,
                 l.Descripcion,
@@ -66,10 +77,10 @@ public class GetLocalesQueryHandler : IRequestHandler<GetLocalesQuery, List<Loca
                 l.EstadoAprobacion,
                 l.CertificadoRucUrl,
                 l.MotivoRechazo,
-                l.Propietario != null ? l.Propietario.Email : null
-            ))
-            .ToListAsync(cancellationToken);
-
-        return locales;
+                l.Propietario != null ? l.Propietario.Email : null,
+                calificacionPromedio,
+                totalResenas
+            );
+        }).ToList();
     }
 }
