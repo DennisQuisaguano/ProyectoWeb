@@ -18,6 +18,7 @@ class AppTheme {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: AppColors.background,
+      cardColor: Colors.white,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -124,6 +125,9 @@ class AppTheme {
         onError: Colors.black,
       ),
       scaffoldBackgroundColor: AppColors.darkBackground,
+      cardColor: AppColors.darkSurface,
+      canvasColor: AppColors.darkBackground,
+      dialogBackgroundColor: AppColors.darkSurface,
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.darkSurface,
         elevation: 0,
