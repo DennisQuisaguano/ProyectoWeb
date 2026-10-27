@@ -14,7 +14,7 @@ public class RequestManualPasswordResetCommandHandler : IRequestHandler<RequestM
     private readonly INotificacionService _notificacionService;
 
     public RequestManualPasswordResetCommandHandler(
-        IApplicationDbContext context, 
+        IApplicationDbContext context,
         IPasswordHasher passwordHasher,
         INotificacionService notificacionService)
     {

@@ -112,13 +112,13 @@ namespace src.Services
             var noti = new NotificationMessage { Tipo = tipo, Mensaje = mensaje };
             Notificaciones.Insert(0, noti);
             OnChange?.Invoke();
-            
+
             if (noti.MostrarToast)
             {
                 OnToastRequested?.Invoke(noti);
             }
         }
-        
+
         public void ShowSuccess(string mensaje) => AddNotification("success", mensaje);
         public void ShowError(string mensaje) => AddNotification("error", mensaje);
         public void ShowInfo(string mensaje) => AddNotification("info", mensaje);

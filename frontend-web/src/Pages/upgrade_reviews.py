@@ -26,7 +26,7 @@ new_ver_resenas = r'''<button class="btn btn-light btn-sm rounded-pill px-3 shad
 text = re.sub(old_ver_resenas, new_ver_resenas, text)
 
 # Just in case the previous replace failed because of exact match, let's also do a manual string replace
-text = text.replace('<button class="btn btn-sm btn-link text-decoration-none p-0 small" @onclick="() => AbrirModalResenas(local)">Ver reseñas</button>', 
+text = text.replace('<button class="btn btn-sm btn-link text-decoration-none p-0 small" @onclick="() => AbrirModalResenas(local)">Ver reseñas</button>',
                     '<button class="btn btn-light btn-sm rounded-pill px-3 shadow-sm text-primary fw-bold border" @onclick="() => AbrirModalResenas(local)"><i class="bi bi-star-fill text-warning me-1"></i> Reseñas</button>')
 
 # 3. Add the "Suspender" button to the modal footer

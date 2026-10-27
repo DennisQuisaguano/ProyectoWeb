@@ -27,7 +27,7 @@ public class TogglePromocionCommandHandler : IRequestHandler<TogglePromocionComm
         }
 
         promo.EstaActiva = !promo.EstaActiva;
-        
+
         if (promo.EstaActiva)
         {
             var now = DateTime.UtcNow;

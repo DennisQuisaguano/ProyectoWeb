@@ -52,7 +52,7 @@ public class ArchivosController : ApiControllerBase
 
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
         var validExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-        
+
         if (!validExtensions.Contains(extension))
         {
             return BadRequest("La imagen debe ser de formato JPG, PNG o WEBP.");

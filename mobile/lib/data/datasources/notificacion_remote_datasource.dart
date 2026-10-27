@@ -50,4 +50,3 @@ class NotificacionRemoteDataSource {
     return [];
   }
 }
-

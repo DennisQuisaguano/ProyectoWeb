@@ -85,7 +85,7 @@ public class AdminService
     {
         try
         {
-            return await _http.GetFromJsonAsync<List<ResenaDetalleModel>>($"api/admin/locales/{localId}/resenas") 
+            return await _http.GetFromJsonAsync<List<ResenaDetalleModel>>($"api/admin/locales/{localId}/resenas")
                    ?? new List<ResenaDetalleModel>();
         }
         catch
@@ -98,7 +98,7 @@ public class AdminService
     {
         try
         {
-            return await _http.GetFromJsonAsync<List<PendingPasswordResetModel>>("api/admin/claves-pendientes") 
+            return await _http.GetFromJsonAsync<List<PendingPasswordResetModel>>("api/admin/claves-pendientes")
                    ?? new List<PendingPasswordResetModel>();
         }
         catch

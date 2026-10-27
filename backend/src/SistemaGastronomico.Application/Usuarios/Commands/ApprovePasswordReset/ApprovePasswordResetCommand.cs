@@ -28,7 +28,7 @@ public class ApprovePasswordResetCommandHandler : IRequestHandler<ApprovePasswor
             throw new System.Exception("El usuario no tiene un restablecimiento de contraseña pendiente.");
 
         user.PasswordHash = user.PendingPasswordHash;
-        
+
         user.PendingPasswordHash = null;
         user.IsPasswordResetPending = false;
         user.PasswordResetRequestedAt = null;

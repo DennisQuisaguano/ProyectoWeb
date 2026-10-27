@@ -314,5 +314,3 @@ thead th {
 
 .btn-emerald { background-color: var(--emerald-bg) !important; color: var(--emerald-dark) !important; border: 1px solid var(--emerald-border) !important; }
 .btn-emerald:hover { background-color: var(--emerald-border) !important; color: var(--emerald-dark) !important; }
-
-

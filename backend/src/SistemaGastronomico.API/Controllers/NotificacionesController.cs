@@ -81,4 +81,3 @@ public class NotificacionesController : ControllerBase
 }
 
 public record RegistrarDispositivoRequest(string Token, string? Plataforma);
-

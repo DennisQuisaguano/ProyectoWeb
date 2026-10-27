@@ -59,12 +59,12 @@ else
                 <p class="text-muted small fw-semibold mb-0">Basado en @resenas.Count @(resenas.Count == 1 ? "opinión" : "opiniones")</p>
             </div>
         </div>
-        
+
         <div class="col-12 col-md-8">
             <!-- Resumen de progreso -->
             <div class="card h-100 border-0 shadow-sm rounded-4 bg-white p-4">
                 <h5 class="fw-bold text-muted small text-uppercase mb-3">Distribución de opiniones</h5>
-                
+
                 @for (int estrellas = 5; estrellas >= 1; estrellas--)
                 {
                     var count = conteoEstrellas.GetValueOrDefault(estrellas, 0);
