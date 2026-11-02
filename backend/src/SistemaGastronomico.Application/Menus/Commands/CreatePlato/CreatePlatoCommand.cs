@@ -44,21 +44,25 @@ public class CreatePlatoCommandValidator : AbstractValidator<CreatePlatoCommand>
 public class CreatePlatoCommandHandler : IRequestHandler<CreatePlatoCommand, PlatoDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public CreatePlatoCommandHandler(IApplicationDbContext context)
+    public CreatePlatoCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<PlatoDto> Handle(CreatePlatoCommand request, CancellationToken cancellationToken)
     {
-        var localExiste = await _context.Locales
-            .AnyAsync(l => l.Id == request.LocalId && l.IsActive, cancellationToken);
+        var local = await _context.Locales
+            .FirstOrDefaultAsync(l => l.Id == request.LocalId && l.IsActive, cancellationToken);
 
-        if (!localExiste)
+        if (local == null)
         {
             throw new NotFoundException("Local", request.LocalId);
         }
+
+        _currentUser.EnsureOwnerOrAdmin(local.PropietarioId);
 
         var plato = new Plato
         {

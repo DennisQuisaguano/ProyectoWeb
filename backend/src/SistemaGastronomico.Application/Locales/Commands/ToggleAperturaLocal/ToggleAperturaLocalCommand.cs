@@ -10,10 +10,12 @@ public record ToggleAperturaLocalCommand(Guid LocalId) : IRequest<bool>;
 public class ToggleAperturaLocalCommandHandler : IRequestHandler<ToggleAperturaLocalCommand, bool>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public ToggleAperturaLocalCommandHandler(IApplicationDbContext context)
+    public ToggleAperturaLocalCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<bool> Handle(ToggleAperturaLocalCommand request, CancellationToken cancellationToken)
@@ -25,6 +27,8 @@ public class ToggleAperturaLocalCommandHandler : IRequestHandler<ToggleAperturaL
         {
             throw new NotFoundException("Local", request.LocalId);
         }
+
+        _currentUser.EnsureOwnerOrAdmin(local.PropietarioId);
 
         local.EstaAbierto = !local.EstaAbierto;
         local.UpdatedAt = DateTime.UtcNow;

@@ -74,10 +74,12 @@ public class UpdateLocalCommandValidator : AbstractValidator<UpdateLocalCommand>
 public class UpdateLocalCommandHandler : IRequestHandler<UpdateLocalCommand, LocalDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public UpdateLocalCommandHandler(IApplicationDbContext context)
+    public UpdateLocalCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<LocalDto> Handle(UpdateLocalCommand request, CancellationToken cancellationToken)
@@ -91,6 +93,8 @@ public class UpdateLocalCommandHandler : IRequestHandler<UpdateLocalCommand, Loc
         {
             throw new NotFoundException("Local", request.Id);
         }
+
+        _currentUser.EnsureOwnerOrAdmin(local.PropietarioId);
 
         local.Nombre = request.Nombre.Trim();
         local.Descripcion = request.Descripcion?.Trim() ?? string.Empty;

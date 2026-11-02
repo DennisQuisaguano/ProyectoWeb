@@ -41,6 +41,15 @@ public class CustomExceptionHandler : IExceptionHandler
                     Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
                     Detail = notFoundEx.Message
                 }),
+            ForbiddenAccessException => (
+                StatusCodes.Status403Forbidden,
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status403Forbidden,
+                    Title = "Acceso denegado",
+                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+                    Detail = "No tienes permisos para realizar esta acción."
+                }),
             UnauthorizedAccessException => (
                 StatusCodes.Status401Unauthorized,
                 new ProblemDetails

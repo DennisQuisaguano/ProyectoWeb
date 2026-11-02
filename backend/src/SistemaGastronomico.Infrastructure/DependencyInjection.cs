@@ -1,4 +1,4 @@
-﻿namespace SistemaGastronomico.Infrastructure;
+namespace SistemaGastronomico.Infrastructure;
 
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -31,7 +31,11 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, Services.EmailService>();
 
         // Configuración de JWT Bearer
-        var secretKey = configuration["JwtSettings:Secret"] ?? "ClaveSecretaSuperSeguraParaSistemaGastronomicoUTA2026";
+        var secretKey = configuration["JwtSettings:Secret"];
+        if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Length < 32)
+        {
+            throw new InvalidOperationException("JwtSettings:Secret no está configurado o tiene menos de 32 caracteres. Defínelo con variable de entorno JwtSettings__Secret o user-secrets.");
+        }
         var issuer = configuration["JwtSettings:Issuer"] ?? "SistemaGastronomicoUTA";
         var audience = configuration["JwtSettings:Audience"] ?? "SistemaGastronomicoUTACommunity";
 

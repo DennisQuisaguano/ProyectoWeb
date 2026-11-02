@@ -43,21 +43,26 @@ public class UpdatePlatoCommandValidator : AbstractValidator<UpdatePlatoCommand>
 public class UpdatePlatoCommandHandler : IRequestHandler<UpdatePlatoCommand, PlatoDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public UpdatePlatoCommandHandler(IApplicationDbContext context)
+    public UpdatePlatoCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<PlatoDto> Handle(UpdatePlatoCommand request, CancellationToken cancellationToken)
     {
         var plato = await _context.Platos
+            .Include(p => p.Local)
             .FirstOrDefaultAsync(p => p.Id == request.Id && p.IsActive, cancellationToken);
 
         if (plato == null)
         {
             throw new NotFoundException("Plato", request.Id);
         }
+
+        _currentUser.EnsureOwnerOrAdmin(plato.Local.PropietarioId);
 
         plato.Nombre = request.Nombre.Trim();
         plato.Descripcion = request.Descripcion?.Trim() ?? string.Empty;

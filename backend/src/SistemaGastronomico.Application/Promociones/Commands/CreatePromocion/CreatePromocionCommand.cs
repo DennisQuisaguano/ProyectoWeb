@@ -55,11 +55,13 @@ public class CreatePromocionCommandValidator : AbstractValidator<CreatePromocion
 public class CreatePromocionCommandHandler : IRequestHandler<CreatePromocionCommand, PromocionDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
     private readonly INotificacionService _notificacionService;
 
-    public CreatePromocionCommandHandler(IApplicationDbContext context, INotificacionService notificacionService)
+    public CreatePromocionCommandHandler(IApplicationDbContext context, INotificacionService notificacionService, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
         _notificacionService = notificacionService;
     }
 
@@ -72,6 +74,8 @@ public class CreatePromocionCommandHandler : IRequestHandler<CreatePromocionComm
         {
             throw new NotFoundException("Local", request.LocalId);
         }
+
+        _currentUser.EnsureOwnerOrAdmin(local.PropietarioId);
 
         var promo = new Promocion
         {

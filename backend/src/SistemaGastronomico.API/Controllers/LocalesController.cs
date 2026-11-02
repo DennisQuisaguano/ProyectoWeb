@@ -88,7 +88,7 @@ public class LocalesController : ApiControllerBase
     /// Lista de locales para el Administrador según su estado de aprobación.
     /// </summary>
     [HttpGet("pendientes")]
-    [Authorize]
+    [Authorize(Roles = "Administrador")]
     public async Task<ActionResult<List<LocalDto>>> GetPendientes([FromQuery] EstadoAprobacionLocal? estado)
     {
         var result = await Mediator.Send(new SistemaGastronomico.Application.Locales.Queries.GetLocalesPendientes.GetLocalesPendientesQuery(estado));
@@ -99,7 +99,7 @@ public class LocalesController : ApiControllerBase
     /// Aprueba un local comercial y notifica al dueño vía correo real.
     /// </summary>
     [HttpPost("{id:guid}/aprobar")]
-    [Authorize]
+    [Authorize(Roles = "Administrador")]
     public async Task<ActionResult<LocalDto>> Aprobar(Guid id)
     {
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -113,7 +113,7 @@ public class LocalesController : ApiControllerBase
     /// Rechaza la solicitud de un local comercial con un motivo y notifica vía correo real.
     /// </summary>
     [HttpPost("{id:guid}/rechazar")]
-    [Authorize]
+    [Authorize(Roles = "Administrador")]
     public async Task<ActionResult<LocalDto>> Rechazar(Guid id, [FromBody] RechazarLocalRequest request)
     {
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);

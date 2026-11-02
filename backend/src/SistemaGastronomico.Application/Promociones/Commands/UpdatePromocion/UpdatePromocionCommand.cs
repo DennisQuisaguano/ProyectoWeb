@@ -22,11 +22,13 @@ public record UpdatePromocionCommand(
 public class UpdatePromocionCommandHandler : IRequestHandler<UpdatePromocionCommand, PromocionDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
     private readonly INotificacionService _notificacionService;
 
-    public UpdatePromocionCommandHandler(IApplicationDbContext context, INotificacionService notificacionService)
+    public UpdatePromocionCommandHandler(IApplicationDbContext context, INotificacionService notificacionService, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
         _notificacionService = notificacionService;
     }
 
@@ -40,6 +42,8 @@ public class UpdatePromocionCommandHandler : IRequestHandler<UpdatePromocionComm
         {
             throw new NotFoundException("Promocion", request.Id);
         }
+
+        _currentUser.EnsureOwnerOrAdmin(promocion.Local.PropietarioId);
 
         var oldFechaInicio = promocion.FechaInicio;
         var oldDiasValidos = promocion.DiasValidos;

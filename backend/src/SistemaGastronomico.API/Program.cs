@@ -44,6 +44,9 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, SistemaGastronomico.API.Services.CurrentUserService>();
+
 builder.Services.AddControllers();
 
 // SignalR y Notificaciones
@@ -138,18 +141,28 @@ using (var scope = app.Services.CreateScope())
     {
         if (!await context.Usuarios.AnyAsync(u => u.Rol == RolUsuario.Administrador))
         {
-            var admin = new Usuario
+            var adminEmail = builder.Configuration["AdminSeed:Email"];
+            var adminPassword = builder.Configuration["AdminSeed:Password"];
+
+            if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminPassword))
             {
-                NombreCompleto = "Administrador UTA",
-                Email = "admin@uta.edu.ec",
-                PasswordHash = passwordHasher.HashPassword("Admin123!"),
-                Telefono = "0999999999",
-                Rol = RolUsuario.Administrador,
-                IsActive = true
-            };
-            context.Usuarios.Add(admin);
-            await context.SaveChangesAsync(CancellationToken.None);
-            logger.LogInformation(">>> Usuario Administrador inicial creado con éxito: admin@uta.edu.ec / Admin123!");
+                logger.LogWarning("No existe administrador y AdminSeed:Email/AdminSeed:Password no están configurados. No se creó ningún administrador.");
+            }
+            else
+            {
+                var admin = new Usuario
+                {
+                    NombreCompleto = "Administrador UTA",
+                    Email = adminEmail.Trim().ToLowerInvariant(),
+                    PasswordHash = passwordHasher.HashPassword(adminPassword),
+                    Telefono = "0999999999",
+                    Rol = RolUsuario.Administrador,
+                    IsActive = true
+                };
+                context.Usuarios.Add(admin);
+                await context.SaveChangesAsync(CancellationToken.None);
+                logger.LogInformation("Usuario Administrador inicial creado: {Email}", admin.Email);
+            }
         }
     }
     catch (Exception ex)

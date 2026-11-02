@@ -35,6 +35,10 @@ public class RegisterUserCommandValidator : AbstractValidator<RegisterUserComman
             .MinimumLength(6).WithMessage("La contraseña debe tener al menos 6 caracteres.")
             .MaximumLength(100).WithMessage("La contraseña no debe exceder los 100 caracteres.");
 
+        RuleFor(v => v.Rol)
+            .Must(r => r == RolUsuario.DuenoLocal || r == RolUsuario.Estudiante)
+            .WithMessage("El rol seleccionado no es válido para el registro público.");
+
         RuleFor(v => v.Telefono)
             .Matches(@"^[0-9]{10}$").WithMessage("El teléfono debe contener exactamente 10 dígitos numéricos.")
             .MaximumLength(10)

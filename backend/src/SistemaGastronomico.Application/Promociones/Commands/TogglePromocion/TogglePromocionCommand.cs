@@ -10,21 +10,26 @@ public record TogglePromocionCommand(Guid PromocionId) : IRequest<bool>;
 public class TogglePromocionCommandHandler : IRequestHandler<TogglePromocionCommand, bool>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public TogglePromocionCommandHandler(IApplicationDbContext context)
+    public TogglePromocionCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<bool> Handle(TogglePromocionCommand request, CancellationToken cancellationToken)
     {
         var promo = await _context.Promociones
+            .Include(p => p.Local)
             .FirstOrDefaultAsync(p => p.Id == request.PromocionId && p.IsActive, cancellationToken);
 
         if (promo == null)
         {
             throw new NotFoundException("Promocion", request.PromocionId);
         }
+
+        _currentUser.EnsureOwnerOrAdmin(promo.Local.PropietarioId);
 
         promo.EstaActiva = !promo.EstaActiva;
 

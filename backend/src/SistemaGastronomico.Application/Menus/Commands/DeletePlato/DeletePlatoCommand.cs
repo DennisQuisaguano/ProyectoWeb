@@ -10,21 +10,26 @@ public record DeletePlatoCommand(Guid Id) : IRequest;
 public class DeletePlatoCommandHandler : IRequestHandler<DeletePlatoCommand>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public DeletePlatoCommandHandler(IApplicationDbContext context)
+    public DeletePlatoCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task Handle(DeletePlatoCommand request, CancellationToken cancellationToken)
     {
         var plato = await _context.Platos
+            .Include(p => p.Local)
             .FirstOrDefaultAsync(p => p.Id == request.Id && p.IsActive, cancellationToken);
 
         if (plato == null)
         {
             throw new NotFoundException("Plato", request.Id);
         }
+
+        _currentUser.EnsureOwnerOrAdmin(plato.Local.PropietarioId);
 
         // Borrado lógico
         plato.IsActive = false;

@@ -11,10 +11,12 @@ public record GetLocalEstadisticasQuery(Guid LocalId) : IRequest<LocalEstadistic
 public class GetLocalEstadisticasQueryHandler : IRequestHandler<GetLocalEstadisticasQuery, LocalEstadisticasDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetLocalEstadisticasQueryHandler(IApplicationDbContext context)
+    public GetLocalEstadisticasQueryHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<LocalEstadisticasDto> Handle(GetLocalEstadisticasQuery request, CancellationToken cancellationToken)
@@ -27,6 +29,8 @@ public class GetLocalEstadisticasQueryHandler : IRequestHandler<GetLocalEstadist
         {
             throw new NotFoundException("Local", request.LocalId);
         }
+
+        _currentUser.EnsureOwnerOrAdmin(local.PropietarioId);
 
         var totalVisitas = await _context.Estadisticas
             .CountAsync(e => e.LocalId == request.LocalId && e.TipoEvento == TipoEventoEstadistica.VisitaPerfil, cancellationToken);
