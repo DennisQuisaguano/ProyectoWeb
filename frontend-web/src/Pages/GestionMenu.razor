@@ -7,12 +7,12 @@
 @inject IJSRuntime JS
 @inject NotificationService NotificationService
 
-<PageTitle>Menúú y Productos - Sistema Gastronómico UTA</PageTitle>
+<PageTitle>Menú y Productos - Sistema Gastronómico UTA</PageTitle>
 
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4 pb-3 border-bottom">
     <div>
         <h2 class="fw-bold mb-1 text-dark">Menú y Productos</h2>
-        <p class="text-muted small mb-0">Gestión de catálogo, precios y disponibilidíad en tiempo real</p>
+        <p class="text-muted small mb-0">Gestión de catálogo, precios y disponibilidad en tiempo real</p>
     </div>
 
     @if (localActual != null)
@@ -28,7 +28,7 @@
 {
     <div class="text-center py-5">
         <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-2 text-muted fw-semibold">Cargando menúúú...</p>
+        <p class="mt-2 text-muted fw-semibold">Cargando menú...</p>
     </div>
 }
 else if (localActual == null)
@@ -37,7 +37,7 @@ else if (localActual == null)
         <div class="d-inline-flex p-3 rounded-circle bg-primary-subtle text-primary mx-auto mb-3">
             <i class="bi bi-shop fs-2 text-primary"></i>
         </div>
-        <h5 class="fw-bold text-dark mb-1">Registra tu local para gestionar el menúúú</h5>
+        <h5 class="fw-bold text-dark mb-1">Registra tu local para gestionar el menú</h5>
         <p class="text-muted small mx-auto mb-3" style="max-width: 450px;">
             Configura primero la información de tu establecimiento antes de publicar platos y ofertas.
         </p>
@@ -50,7 +50,7 @@ else if (localActual == null)
 }
 else
 {
-    <!-- Barra de Búsquedía y Filtros Estructurados -->
+    <!-- Barra de Búsqueda y Filtros Estructurados -->
     <div class="card border shadow-sm rounded-4 p-3 bg-white mb-4">
         <div class="row g-2 align-items-center">
             <div class="col-md-4 col-lg-3">
@@ -83,7 +83,7 @@ else
                     </button>
                     <button class="filter-tab-pill @(filtroCategoria == CategoriaPlatoModel.ComidaRapida ? "active-primary" : "")"
                             @onclick="() => FiltrarPorCategoria(CategoriaPlatoModel.ComidaRapida)">
-                        Comidía Rápidía (@platos.Count(p => p.Categoria == CategoriaPlatoModel.ComidaRapida))
+                        Comida Rápida (@platos.Count(p => p.Categoria == CategoriaPlatoModel.ComidaRapida))
                     </button>
                     <button class="filter-tab-pill @(filtroCategoria == CategoriaPlatoModel.Combo ? "active-primary" : "")"
                             @onclick="() => FiltrarPorCategoria(CategoriaPlatoModel.Combo)">
@@ -175,13 +175,13 @@ else
                                 </span>
                                 @if (promo != null && !string.IsNullOrEmpty(promo.DiasValidos))
                                 {
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle small fw-semibold más-1">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle small fw-semibold ms-1">
                                         <i class="bi bi-tag-fill me-1"></i> Oferta: @promo.DiasValidos
                                     </span>
                                 }
                                 else if (promo != null)
                                 {
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle small fw-semibold más-1">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle small fw-semibold ms-1">
                                         <i class="bi bi-tag-fill me-1"></i> Oferta Activa
                                     </span>
                                 }
@@ -195,8 +195,8 @@ else
                             <div class="border-top pt-3 d-flex align-items-center justify-content-between gap-2">
                                 <button class="btn btn-sm @(plato.EstaDisponible ? "btn-success" : "btn-secondary") px-3 py-1 rounded-pill fw-semibold shadow-sm"
                                         @onclick="() => ToggleDisponible(plato)"
-                                        title="Cambiar disponibilidíad en 1 clic">
-                                    <i class="bi @(plato.EstaDisponible ? "bi-check2-circle" : "bi-díash-circle") me-1 text-white"></i>
+                                        title="Cambiar disponibilidad en 1 clic">
+                                    <i class="bi @(plato.EstaDisponible ? "bi-check2-circle" : "bi-dash-circle") me-1 text-white"></i>
                                     <span class="text-white">@(plato.EstaDisponible ? "Disponible" : "Agotado")</span>
                                 </button>
 
@@ -215,11 +215,11 @@ else
                                         <i class="bi bi-pencil-fill small text-dark"></i>
                                     </button>
 
-                                    <button class="btn btn-light border btn-sm text-díanger rounded-circle p-2"
+                                    <button class="btn btn-light border btn-sm text-danger rounded-circle p-2"
                                             @onclick="() => EliminarPlato(plato)"
                                             style="width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;"
                                             title="Eliminar">
-                                        <i class="bi bi-trash3-fill small text-díanger"></i>
+                                        <i class="bi bi-trash3-fill small text-danger"></i>
                                     </button>
                                 </div>
                             </div>
@@ -243,7 +243,7 @@ else
                         <h5 class="modal-title fw-bold text-dark mb-0">
                             @(esEdicion ? "Modificar Producto" : "Nuevo Producto")
                         </h5>
-                        <small class="text-muted">@(esEdicion ? "Actualiza los díatos del plato en el menúúú" : "Ingresa los díatos para registrarlo en tu local")</small>
+                        <small class="text-muted">@(esEdicion ? "Actualiza los datos del plato en el menú" : "Ingresa los datos para registrarlo en tu local")</small>
                     </div>
                     <button type="button" class="btn-close" @onclick="CerrarModal"></button>
                 </div>
@@ -255,7 +255,7 @@ else
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-dark">Nombre del Producto</label>
                             <InputText class="form-control text-dark fw-medium" @bind-Value="modeloFormulario.Nombre" @bind-Value:after="Revalidar" placeholder="Ej: Almuerzo Ejecutivo, Combo Pizza Personal" />
-                            <ValidationMessage For="() => modeloFormulario.Nombre" class="text-díanger small mt-1" />
+                            <ValidationMessage For="() => modeloFormulario.Nombre" class="text-danger small mt-1" />
                         </div>
 
                         <div class="row g-3 mb-3">
@@ -265,7 +265,7 @@ else
                                     <option value="@CategoriaPlatoModel.Almuerzo">Almuerzo</option>
                                     <option value="@CategoriaPlatoModel.Desayuno">Desayuno</option>
                                     <option value="@CategoriaPlatoModel.PlatoCarta">A la Carta</option>
-                                    <option value="@CategoriaPlatoModel.ComidaRapida">Comidía Rápidía</option>
+                                    <option value="@CategoriaPlatoModel.ComidaRapida">Comida Rápida</option>
                                     <option value="@CategoriaPlatoModel.Combo">Combo</option>
                                     <option value="@CategoriaPlatoModel.Bebida">Bebida</option>
                                     <option value="@CategoriaPlatoModel.Snack">Snack</option>
@@ -280,13 +280,13 @@ else
                                     <span class="input-group-text bg-light text-dark fw-bold border">$</span>
                                     <InputNumber class="form-control text-dark fw-bold" @bind-Value="modeloFormulario.Precio" @bind-Value:after="Revalidar" min="0" step="0.05" onkeydown="if(event.key==='-' || event.key==='e') event.preventDefault();" />
                                 </div>
-                                <ValidationMessage For="() => modeloFormulario.Precio" class="text-díanger small mt-1" />
+                                <ValidationMessage For="() => modeloFormulario.Precio" class="text-danger small mt-1" />
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-dark">Descripción o Componentes <span class="text-muted fw-normal">(opcional)</span></label>
-                            <InputTextArea class="form-control text-dark" rows="2" @bind-Value="modeloFormulario.Descripcion" placeholder="Ej: Incluye sopa del día, arroz con menúúestra y jugo natural" />
+                            <InputTextArea class="form-control text-dark" rows="2" @bind-Value="modeloFormulario.Descripcion" placeholder="Ej: Incluye sopa del día, arroz con menestra y jugo natural" />
                         </div>
 
                         <div class="mb-3">
@@ -306,13 +306,13 @@ else
                             </div>
                         </div>
 
-                        <!-- Opciones Rápidías de Estado -->
+                        <!-- Opciones Rápidas de Estado -->
                         <div class="row g-2 pt-1">
                             <div class="col-6">
                                 <div class="border rounded-3 p-3 bg-light h-100 d-flex flex-column justify-content-between">
                                     <div class="form-check form-switch mb-0">
                                         <InputCheckbox class="form-check-input" @bind-Value="modeloFormulario.EstaDisponible" id="checkDispModal" />
-                                        <label class="form-check-label fw-bold text-dark small más-1" for="checkDispModal">
+                                        <label class="form-check-label fw-bold text-dark small ms-1" for="checkDispModal">
                                             Disponible
                                         </label>
                                     </div>
@@ -323,11 +323,11 @@ else
                                 <div class="border rounded-3 p-3 bg-light h-100 d-flex flex-column justify-content-between">
                                     <div class="form-check form-switch mb-0">
                                         <InputCheckbox class="form-check-input" @bind-Value="modeloFormulario.EsPlatoDelDia" id="checkPlatoDiaModal" />
-                                        <label class="form-check-label fw-bold text-dark small más-1" for="checkPlatoDiaModal">
+                                        <label class="form-check-label fw-bold text-dark small ms-1" for="checkPlatoDiaModal">
                                             Plato del Día
                                         </label>
                                     </div>
-                                    <small class="text-muted" style="font-size: 0.75rem;">Destacado en portadía</small>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Destacado en portada</small>
                                 </div>
                             </div>
                         </div>
@@ -341,7 +341,7 @@ else
                             @if (guardandoPlato)
                             {
                                 <span class="spinner-border spinner-border-sm me-1 text-white"></span>
-                                <span class="text-white">Guardíando...</span>
+                                <span class="text-white">Guardando...</span>
                             }
                             else
                             {
@@ -420,7 +420,7 @@ else
             if (exito && !string.IsNullOrEmpty(url))
             {
                 modeloFormulario.ImagenUrl = url;
-                NotificationService.ShowSuccess("Imagen subidía correctamenúúte.");
+                NotificationService.ShowSuccess("Imagen subida correctamente.");
             }
             else
             {
@@ -464,7 +464,7 @@ else
         if (!exito)
         {
             plato.EstaDisponible = !plato.EstaDisponible;
-            NotificationService.ShowError("Error al cambiar la disponibilidíad del producto.");
+            NotificationService.ShowError("Error al cambiar la disponibilidad del producto.");
         }
         else
         {
@@ -545,7 +545,7 @@ else
                 {
                     platos[index] = actualizado;
                 }
-                NotificationService.ShowSuccess($"El producto '{actualizado.Nombre}' se ha modificado correctamenúúte.");
+                NotificationService.ShowSuccess($"El producto '{actualizado.Nombre}' se ha modificado correctamente.");
                 mostrarModal = false;
             }
             else
@@ -559,7 +559,7 @@ else
             if (exito && creado != null)
             {
                 platos.Insert(0, creado);
-                NotificationService.ShowSuccess($"Producto '{creado.Nombre}' creado exitosamenúúte en el menúúú.");
+                NotificationService.ShowSuccess($"Producto '{creado.Nombre}' creado exitosamente en el menú.");
                 mostrarModal = false;
             }
             else

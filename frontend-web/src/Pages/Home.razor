@@ -7,7 +7,7 @@
 @inject NavigationManager Navigation
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 
-<PageTitle>Díashboard - Sistema Gastronómico UTA</PageTitle>
+<PageTitle>Dashboard - Sistema Gastronómico UTA</PageTitle>
 
 @if (cargando)
 {
@@ -161,7 +161,7 @@ else if (miLocal != null)
             <div class="mt-4 mt-md-0 d-flex flex-column align-items-md-end">
                 @if (miLocal.EstadoAprobacion == EstadoAprobacionLocalModel.Rechazado)
                 {
-                    <div class="alert alert-díanger mb-0 py-2 px-3 shadow-sm d-flex align-items-center gap-2 border-0">
+                    <div class="alert alert-danger mb-0 py-2 px-3 shadow-sm d-flex align-items-center gap-2 border-0">
                         <i class="bi bi-exclamation-octagon-fill fs-5"></i>
                         <div>
                             <strong class="d-block small">Local Suspendido</strong>
@@ -191,7 +191,7 @@ else if (miLocal != null)
     </div>
 
     <div class="row g-4 mb-4">
-        <!-- Columna Izquierdía: KPIs y Métricas -->
+        <!-- Columna Izquierda: KPIs y Métricas -->
         <div class="col-12 col-lg-8">
             <h5 class="fw-bold text-dark mb-3"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Rendimiento de tu Local</h5>
             <div class="row g-3">
@@ -216,7 +216,7 @@ else if (miLocal != null)
                             <div>
                                 <span class="text-muted small fw-bold text-uppercase">Platos Publicados</span>
                                 <h3 class="fw-bold text-dark mt-1 mb-0">@(estadisticas?.TotalPlatos ?? 0)</h3>
-                                <small class="text-muted fw-semibold">En el menúú actual</small>
+                                <small class="text-muted fw-semibold">En el menú actual</small>
                             </div>
                             <div class="p-3 bg-success-subtle text-success rounded-circle shadow-sm">
                                 <i class="bi bi-card-list fs-3"></i>
@@ -231,7 +231,7 @@ else if (miLocal != null)
                             <div>
                                 <span class="text-muted small fw-bold text-uppercase">Promos Activas</span>
                                 <h3 class="fw-bold text-dark mt-1 mb-0">@(estadisticas?.PromocionesActivas ?? 0)</h3>
-                                <small class="text-muted fw-semibold">Ofertas publicadías</small>
+                                <small class="text-muted fw-semibold">Ofertas publicadas</small>
                             </div>
                             <div class="p-3 bg-warning-subtle text-warning rounded-circle shadow-sm">
                                 <i class="bi bi-tags-fill fs-3"></i>
@@ -262,17 +262,17 @@ else if (miLocal != null)
             </div>
         </div>
 
-        <!-- Columna Derecha: Acciones Rápidías -->
+        <!-- Columna Derecha: Acciones Rápidas -->
         <div class="col-12 col-lg-4">
-            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Acciones Rápidías</h5>
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Acciones Rápidas</h5>
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100 d-flex flex-column gap-2">
-                <a href="menúu" class="btn btn-light text-start border d-flex align-items-center p-3 rounded-3 shadow-sm hover-elevate">
+                <a href="menu" class="btn btn-light text-start border d-flex align-items-center p-3 rounded-3 shadow-sm hover-elevate">
                     <div class="p-2 bg-success-subtle text-success rounded me-3">
                         <i class="bi bi-plus-lg fs-5"></i>
                     </div>
                     <div>
                         <strong class="d-block text-dark">Añadir Nuevo Plato</strong>
-                        <span class="small text-muted">Sube tu menúú del día</span>
+                        <span class="small text-muted">Sube tu menú del día</span>
                     </div>
                 </a>
 
@@ -326,7 +326,7 @@ else if (miLocal != null)
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarDíatos();
+        await CargarDatos();
     }
 
         private string ObtenerUrlImagen(string? rutaRelativa)
@@ -337,7 +337,7 @@ else if (miLocal != null)
         return $"{baseUrl.TrimEnd('/')}/{rutaRelativa.TrimStart('/')}";
     }
 
-    private async Task CargarDíatos()
+    private async Task CargarDatos()
     {
         cargando = true;
 
@@ -368,8 +368,8 @@ else if (miLocal != null)
         if (miLocal == null) return;
 
         cambiandoEstado = true;
-        var eéeééééxito = await LocalService.ToggleAperturaAsync(miLocal.Id);
-        if (eéeééééxito)
+        var exito = await LocalService.ToggleAperturaAsync(miLocal.Id);
+        if (exito)
         {
             miLocal.EstaAbierto = !miLocal.EstaAbierto;
         }
@@ -388,8 +388,8 @@ else if (miLocal != null)
         if (localSeleccionado == null || string.IsNullOrWhiteSpace(motivoDeshabilitacion)) return;
 
         procesando = true;
-        var (eéeééééxito, actualizado, _) = await AdminService.ToggleOperativoAsync(localSeleccionado.Id, false, motivoDeshabilitacion);
-        if (eéeééééxito && actualizado != null)
+        var (exito, actualizado, _) = await AdminService.ToggleOperativoAsync(localSeleccionado.Id, false, motivoDeshabilitacion);
+        if (exito && actualizado != null)
         {
             localSeleccionado.EstaAbierto = false;
             mensajeAdmin = $"Local '{localSeleccionado.Nombre}' deshabilitado y notificado al propietario.";
@@ -401,11 +401,11 @@ else if (miLocal != null)
     private async Task ConfirmarHabilitar(LocalAdminModel local)
     {
         procesando = true;
-        var (eéeééééxito, actualizado, _) = await AdminService.ToggleOperativoAsync(local.Id, true);
-        if (eéeééééxito && actualizado != null)
+        var (exito, actualizado, _) = await AdminService.ToggleOperativoAsync(local.Id, true);
+        if (exito && actualizado != null)
         {
             local.EstaAbierto = true;
-            mensajeAdmin = $"¡Local '{local.Nombre}' habilitado eéeééééxitosamenúte!";
+            mensajeAdmin = $"¡Local '{local.Nombre}' habilitado exitosamente!";
         }
         procesando = false;
     }

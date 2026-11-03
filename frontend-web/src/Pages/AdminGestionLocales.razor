@@ -26,10 +26,10 @@
     </div>
 </div>
 
-<!-- Tarjeta Principal Unificadía -->
+<!-- Tarjeta Principal Unificada -->
 <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
 
-    <!-- Seccin de Filtros Integradía -->
+    <!-- Seccin de Filtros Integrada -->
     <div class="card-header bg-light border-bottom p-4">
         <div class="row g-3">
             <!-- Buscador -->
@@ -217,7 +217,7 @@
                 </div>
                 <div class="modal-body p-4">
                     <p class="text-dark mb-2">
-                        Estás a punto de deshabilitar la disponibilidíad del local <strong>@localSeleccionado.Nombre</strong>.
+                        Estás a punto de deshabilitar la disponibilidad del local <strong>@localSeleccionado.Nombre</strong>.
                     </p>
                     <p class="text-muted small mb-3">
                         El local dejará de aparecer visible para los estudiantes en la aplicación y se enviará una notificación por correo al propietario con el motivo especificado.
@@ -226,7 +226,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark small">Motivo de Deshabilitación / Suspensión *</label>
                         <textarea class="form-control" rows="3" @bind="motivoDeshabilitacion"
-                                  placeholder="Ej: Calificación promedio menúor a 2.5 estrellas y quejas recurrentes sobre higiene..."></textarea>
+                                  placeholder="Ej: Calificación promedio menor a 2.5 estrellas y quejas recurrentes sobre higiene..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
@@ -263,7 +263,7 @@
                     {
                         <div class="text-center py-4">
                             <div class="spinner-border text-primary" role="status"></div>
-                            <p class="mt-2 text-muted small">Cargando comenútarios...</p>
+                            <p class="mt-2 text-muted small">Cargando comentarios...</p>
                         </div>
                     }
                     else if (resenasLocal.Count == 0)
@@ -278,7 +278,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
                             <div>
                                 <span class="fs-4 fw-bold text-dark"><i class='bi bi-star-fill text-warning me-1'></i> @localSeleccionado.CalificacionPromedio.ToString("0.0")</span>
-                                <span class="text-muted small más-2">(@resenasLocal.Count calificaciones recibidías)</span>
+                                <span class="text-muted small ms-2">(@resenasLocal.Count calificaciones recibidas)</span>
                             </div>
                         </div>
 
@@ -306,11 +306,11 @@
                                                     <i class="bi bi-star text-muted"></i>
                                                 }
                                             }
-                                            <span class="más-1 text-dark">(@r.Calificacion/5)</span>
+                                            <span class="ms-1 text-dark">(@r.Calificacion/5)</span>
                                         </div>
                                     </div>
                                     <p class="text-dark mb-1 small">
-                                        @(string.IsNullOrWhiteSpace(r.Comentario) ? "Sin comenútario escrito." : $"\"{r.Comentario}\"")
+                                        @(string.IsNullOrWhiteSpace(r.Comentario) ? "Sin comentario escrito." : $"\"{r.Comentario}\"")
                                     </p>
                                     <div class="text-muted" style="font-size: 0.7rem;">
                                         <i class="bi bi-clock me-1"></i> @r.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
@@ -411,18 +411,18 @@
     {
         if (localSeleccionado == null || string.IsNullOrWhiteSpace(motivoDeshabilitacion)) return;
 
-        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", $"Estás completamenúte seguro de suspender el local '{localSeleccionado.Nombre}'?");
+        bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", $"Estás completamente seguro de suspender el local '{localSeleccionado.Nombre}'?");
         if (!confirmed) return;
 
         procesando = true;
 
-        var (eéeééééxito, localActualizado, err) = await AdminService.ToggleOperativoAsync(
+        var (exito, localActualizado, err) = await AdminService.ToggleOperativoAsync(
             localSeleccionado.Id,
             habilitar: false,
             motivo: motivoDeshabilitacion
         );
 
-        if (eéeééééxito && localActualizado != null)
+        if (exito && localActualizado != null)
         {
             localSeleccionado.EstaAbierto = false;
             localSeleccionado.MotivoRechazo = motivoDeshabilitacion;
@@ -444,16 +444,16 @@
 
         procesando = true;
 
-        var (eéeééééxito, localActualizado, err) = await AdminService.ToggleOperativoAsync(
+        var (exito, localActualizado, err) = await AdminService.ToggleOperativoAsync(
             local.Id,
             habilitar: true
         );
 
-        if (eéeééééxito && localActualizado != null)
+        if (exito && localActualizado != null)
         {
             local.EstaAbierto = true;
             local.MotivoRechazo = null;
-            await JS.InvokeVoidAsync("mostrarMensajeExito", $"Â¡El local '{local.Nombre}' ha sido habilitado nuevamenúte!");
+            await JS.InvokeVoidAsync("mostrarMensajeExito", $"Â¡El local '{local.Nombre}' ha sido habilitado nuevamente!");
         }
         else
         {

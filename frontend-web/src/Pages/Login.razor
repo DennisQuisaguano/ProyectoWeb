@@ -23,7 +23,7 @@
                 </div>
             }
 
-            <!-- Selector de Pestéañas con Alto Contraste -->
+            <!-- Selector de Pestañas con Alto Contraste -->
             <div class="bg-light p-1 rounded-pill d-flex mb-4 border border-secondary border-opacity-25">
                 <button class="btn btn-sm flex-fill rounded-pill fw-bold py-2 @(isLogin ? "btn-primary shadow-sm" : "text-dark")"
                         @onclick="() => isLogin = true">
@@ -189,10 +189,10 @@
         isLoading = true;
         errorMessage = null;
 
-        var (eéeééééxito, mensaje, _) = await AuthService.LoginAsync(loginModel);
+        var (exito, mensaje, _) = await AuthService.LoginAsync(loginModel);
         isLoading = false;
 
-        if (eéeééééxito)
+        if (exito)
         {
             Navigation.NavigateTo("", forceLoad: true);
         }
@@ -209,16 +209,16 @@
         isLoading = true;
         errorMessage = null;
 
-        var (eéeééééxito, mensaje, _) = await AuthService.RegisterAsync(registerModel);
+        var (exito, mensaje, _) = await AuthService.RegisterAsync(registerModel);
         isLoading = false;
 
-        if (eéeééééxito)
+        if (exito)
         {
             Navigation.NavigateTo("", forceLoad: true);
         }
         else
         {
-            errorMessage = mensaje ?? "Error al registrar la cuenta. Verifique que el correo no estéé registrado.";
+            errorMessage = mensaje ?? "Error al registrar la cuenta. Verifique que el correo no esté registrado.";
         }
     }
 }

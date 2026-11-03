@@ -111,7 +111,7 @@ else
                             </div>
 
                             <!-- Logo Flotante -->
-                            <div class="position-absolute bottom-0 start-0 más-4 z-1" style="transform: translateY(40%);">
+                            <div class="position-absolute bottom-0 start-0 ms-4 z-1" style="transform: translateY(40%);">
                                 <div class="rounded-circle overflow-hidden border border-4 border-white shadow bg-white" style="width: 80px; height: 80px;">
                                     @if (!string.IsNullOrEmpty(local.LogoUrl))
                                     {
@@ -148,7 +148,7 @@ else
                                 </div>
                                 @if (!string.IsNullOrEmpty(local.PropietarioEmail))
                                 {
-                                    <div class="mb-2 más-4 text-muted small">
+                                    <div class="mb-2 ms-4 text-muted small">
                                         <i class="bi bi-envelope text-muted me-1"></i> @local.PropietarioEmail
                                     </div>
                                 }
@@ -342,8 +342,8 @@ else
 
         procesando = true;
 
-        var (eéeééééxito, actualizado, másg) = await LocalService.AprobarLocalAsync(local.Id);
-        if (eéeééééxito && actualizado != null)
+        var (exito, actualizado, msg) = await LocalService.AprobarLocalAsync(local.Id);
+        if (exito && actualizado != null)
         {
             local.EstadoAprobacion = EstadoAprobacionLocalModel.Aprobado;
             local.EstaAbierto = true;
@@ -352,7 +352,7 @@ else
         }
         else
         {
-            await JS.InvokeVoidAsync("mostrarMensajeError", másg ?? "Error al aprobar la solicitud.");
+            await JS.InvokeVoidAsync("mostrarMensajeError", msg ?? "Error al aprobar la solicitud.");
         }
 
         procesando = false;
@@ -381,8 +381,8 @@ else
 
         procesando = true;
 
-        var (eéeééééxito, actualizado, másg) = await LocalService.RechazarLocalAsync(localSeleccionado.Id, motivoRechazo);
-        if (eéeééééxito && actualizado != null)
+        var (exito, actualizado, msg) = await LocalService.RechazarLocalAsync(localSeleccionado.Id, motivoRechazo);
+        if (exito && actualizado != null)
         {
             localSeleccionado.EstadoAprobacion = EstadoAprobacionLocalModel.Rechazado;
             localSeleccionado.EstaAbierto = false;
@@ -392,7 +392,7 @@ else
         }
         else
         {
-            await JS.InvokeVoidAsync("mostrarMensajeError", másg ?? "Error al rechazar la solicitud.");
+            await JS.InvokeVoidAsync("mostrarMensajeError", msg ?? "Error al rechazar la solicitud.");
         }
 
         procesando = false;

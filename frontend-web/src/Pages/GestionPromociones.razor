@@ -51,7 +51,7 @@ else if (!promociones.Any())
             </div>
             <h5 class="fw-bold text-dark mb-2">Aún no tienes promociones</h5>
             <p class="text-muted mx-auto" style="max-width: 400px;">
-                Crea tu primer combo o elige un plato de tu menúúú para promocionarlo y atraer más estudiantes.
+                Crea tu primer combo o elige un plato de tu menú para promocionarlo y atraer más estudiantes.
             </p>
             <button class="btn btn-primary rounded-pill px-4 fw-semibold mt-2 shadow-sm" @onclick="() => AbrirModalCrear()">
                 Publicar mi primera oferta
@@ -81,7 +81,7 @@ else
                     @if (!promo.EstaActiva)
                     {
                         <div class="position-absolute top-0 end-0 m-3 z-3">
-                            <span class="badge bg-secondary rounded-pill px-3 shadow-sm">Pausadía</span>
+                            <span class="badge bg-secondary rounded-pill px-3 shadow-sm">Pausada</span>
                         </div>
                     }
 
@@ -107,7 +107,7 @@ else
                         @if (!string.IsNullOrEmpty(promo.DiasValidos))
                         {
                             <div class="small text-primary fw-semibold mb-2">
-                                <i class="bi bi-calendíar2-week"></i> Válido: @promo.DiasValidos
+                                <i class="bi bi-calendar2-week"></i> Válido: @promo.DiasValidos
                             </div>
                         }
 
@@ -116,7 +116,7 @@ else
                         </p>
 
                         <div class="text-muted small mb-3">
-                            <i class="bi bi-calendíar-event me-1 text-primary"></i>
+                            <i class="bi bi-calendar-event me-1 text-primary"></i>
                             Fechas: @promo.FechaInicio.ToString("dd/MM/yyyy") al @promo.FechaFin.ToString("dd/MM/yyyy")
                         </div>
 
@@ -124,7 +124,7 @@ else
                             <button class="btn btn-sm @(promo.EstaActiva ? "btn-success" : "btn-secondary") px-3 py-1 rounded-pill fw-semibold shadow-sm"
                                     @onclick="() => TogglePromo(promo)">
                                 <i class="bi @(promo.EstaActiva ? "bi-check-circle-fill" : "bi-pause-circle-fill") me-1 text-white"></i>
-                                <span class="text-white">@(promo.EstaActiva ? "Activa" : "Pausadía")</span>
+                                <span class="text-white">@(promo.EstaActiva ? "Activa" : "Pausada")</span>
                             </button>
                             <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 shadow-sm fw-bold" @onclick="() => AbrirModalEditar(promo)">
                                 <i class="bi bi-pencil-square me-1"></i> Editar
@@ -146,7 +146,7 @@ else
                 <div class="modal-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
                     <div>
                         <h5 class="modal-title fw-bold text-dark mb-0">Promocionar Plato Existente</h5>
-                        <small class="text-muted">Elige un plato de tu menúúú para aplicarle un descuento</small>
+                        <small class="text-muted">Elige un plato de tu menú para aplicarle un descuento</small>
                     </div>
                     <button type="button" class="btn-close" @onclick="CerrarModalPlatos"></button>
                 </div>
@@ -155,7 +155,7 @@ else
                     {
                         <div class="p-4 text-center text-muted">
                             <i class="bi bi-inbox fs-1 mb-2 d-block"></i>
-                            Aún no tienes platos en tu menúúú.
+                            Aún no tienes platos en tu menú.
                         </div>
                     }
                     else
@@ -197,12 +197,12 @@ else
                 <DataAnnotationsValidator />
 
                     <div class="modal-body p-4">
-                        <ValidationSummary class="alert alert-díanger border-díanger-subtle small fw-semibold" />
+                        <ValidationSummary class="alert alert-danger border-danger-subtle small fw-semibold" />
 
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-dark">Título de la Oferta *</label>
                             <InputText class="form-control text-dark fw-medium" @bind-Value="modeloPromo.Titulo" @bind-Value:after="Revalidar" placeholder="Ej: Promo 2x1 Hamburguesa / Combo Pizza" />
-                            <ValidationMessage For="() => modeloPromo.Titulo" class="text-díanger small mt-1" />
+                            <ValidationMessage For="() => modeloPromo.Titulo" class="text-danger small mt-1" />
                         </div>
 
                         <div class="row g-3 mb-3">
@@ -212,7 +212,7 @@ else
                                     <span class="input-group-text bg-light text-dark fw-bold border">$</span>
                                     <InputNumber class="form-control text-dark fw-semibold" @bind-Value="modeloPromo.PrecioOriginal" @bind-Value:after="Revalidar" min="0" step="0.10" onkeydown="if(event.key==='-' || event.key==='e') event.preventDefault();" />
                                 </div>
-                                <ValidationMessage For="() => modeloPromo.PrecioOriginal" class="text-díanger small mt-1" />
+                                <ValidationMessage For="() => modeloPromo.PrecioOriginal" class="text-danger small mt-1" />
                             </div>
                             <div class="col-6">
                                 <label class="form-label fw-bold small text-dark">Precio Oferta ($) *</label>
@@ -220,7 +220,7 @@ else
                                     <span class="input-group-text bg-light text-dark fw-bold border">$</span>
                                     <InputNumber class="form-control text-dark fw-bold" @bind-Value="modeloPromo.PrecioPromocional" @bind-Value:after="Revalidar" min="0" step="0.10" onkeydown="if(event.key==='-' || event.key==='e') event.preventDefault();" />
                                 </div>
-                                <ValidationMessage For="() => modeloPromo.PrecioPromocional" class="text-díanger small mt-1" />
+                                <ValidationMessage For="() => modeloPromo.PrecioPromocional" class="text-danger small mt-1" />
                             </div>
                         </div>
 
@@ -230,7 +230,7 @@ else
                                 @foreach (var dia in diasSeleccionados.Keys)
                                 {
                                     <div class="form-check form-switch form-check-inline me-0 border rounded-pill px-3 py-1 @(diasSeleccionados[dia] ? "bg-primary text-white border-primary" : "bg-light text-dark")" style="cursor:pointer;" @onclick="() => ToggleDia(dia)">
-                                        <input class="form-check-input más-0 me-2 d-none" type="checkbox" checked="@diasSeleccionados[dia]" />
+                                        <input class="form-check-input ms-0 me-2 d-none" type="checkbox" checked="@diasSeleccionados[dia]" />
                                         <label class="form-check-label small fw-semibold" style="cursor:pointer;">@dia</label>
                                     </div>
                                 }
@@ -240,21 +240,21 @@ else
 
                         <div class="row g-3 mb-3">
                             <div class="col-6">
-                                <label class="form-label fw-bold small text-dark">Válidía Desde (Fecha Inicio) *</label>
+                                <label class="form-label fw-bold small text-dark">Válida Desde (Fecha Inicio) *</label>
                                 <InputDate class="form-control text-dark" @bind-Value="modeloPromo.FechaInicio" @bind-Value:after="Revalidar" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                                <ValidationMessage For="() => modeloPromo.FechaInicio" class="text-díanger small mt-1" />
+                                <ValidationMessage For="() => modeloPromo.FechaInicio" class="text-danger small mt-1" />
                             </div>
                             <div class="col-6">
-                                <label class="form-label fw-bold small text-dark">Válidía Hasta (Fecha Fin) *</label>
+                                <label class="form-label fw-bold small text-dark">Válida Hasta (Fecha Fin) *</label>
                                 <InputDate class="form-control text-dark" @bind-Value="modeloPromo.FechaFin" @bind-Value:after="Revalidar" min="@modeloPromo.FechaInicio.ToString("yyyy-MM-dd")" />
-                                <ValidationMessage For="() => modeloPromo.FechaFin" class="text-díanger small mt-1" />
+                                <ValidationMessage For="() => modeloPromo.FechaFin" class="text-danger small mt-1" />
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-dark">Descripción Adicional (Condiciones)</label>
                             <InputTextArea class="form-control text-dark" rows="2" @bind-Value="modeloPromo.Descripcion" @bind-Value:after="Revalidar" placeholder="Ej: Válido solo para consumo en el local. No aplica con otras promociones." />
-                            <ValidationMessage For="() => modeloPromo.Descripcion" class="text-díanger small mt-1" />
+                            <ValidationMessage For="() => modeloPromo.Descripcion" class="text-danger small mt-1" />
                         </div>
 
                         <div class="mb-3">
@@ -281,7 +281,7 @@ else
                             @if (guardando)
                             {
                                 <span class="spinner-border spinner-border-sm me-1 text-white"></span>
-                                <span class="text-white">Guardíando...</span>
+                                <span class="text-white">Guardando...</span>
                             }
                             else
                             {
@@ -337,6 +337,7 @@ else
         if (diasSeleccionados.ContainsKey(dia))
         {
             diasSeleccionados[dia] = !diasSeleccionados[dia];
+            SincronizarDiasValidos();
             StateHasChanged();
         }
     }
@@ -391,7 +392,7 @@ else
             if (exito && !string.IsNullOrEmpty(url))
             {
                 modeloPromo.ImagenUrl = url;
-                NotificationService.ShowSuccess("Imagen subidía correctamenúúte.");
+                NotificationService.ShowSuccess("Imagen subida correctamente.");
             }
             else
             {
@@ -508,15 +509,16 @@ else
     {
         bool confirmed = await JS.InvokeAsync<bool>("confirmarAccion", "¿Estás seguro de que deseas guardar esta promoción?");
         if (!confirmed) return;
+        SincronizarDiasValidos();
         guardando = true;
         if (esEdicion)
         {
-            var (exito, actualizadía, msg) = await PromocionService.UpdateAsync(modeloPromo.Id, modeloPromo);
-            if (exito && actualizadía != null)
+            var (exito, actualizada, msg) = await PromocionService.UpdateAsync(modeloPromo.Id, modeloPromo);
+            if (exito && actualizada != null)
             {
                 var index = promociones.FindIndex(p => p.Id == modeloPromo.Id);
-                if (index != -1) promociones[index] = actualizadía;
-                NotificationService.ShowSuccess($"¡La promoción '{actualizadía.Titulo}' fue actualizadía!");
+                if (index != -1) promociones[index] = actualizada;
+                NotificationService.ShowSuccess($"¡La promoción '{actualizada.Titulo}' fue actualizada!");
                 mostrarModal = false;
             }
             else
@@ -526,11 +528,11 @@ else
         }
         else
         {
-            var (exito, creadía, msg) = await PromocionService.CreateAsync(modeloPromo);
-            if (exito && creadía != null)
+            var (exito, creada, msg) = await PromocionService.CreateAsync(modeloPromo);
+            if (exito && creada != null)
             {
-                promociones.Insert(0, creadía);
-                NotificationService.ShowSuccess($"¡La promoción '{creadía.Titulo}' fue publicadía con éxito!");
+                promociones.Insert(0, creada);
+                NotificationService.ShowSuccess($"¡La promoción '{creada.Titulo}' fue publicada con éxito!");
                 mostrarModal = false;
             }
             else
@@ -552,7 +554,7 @@ else
         }
         else
         {
-            NotificationService.ShowInfo($"La promoción '{promo.Titulo}' ahora está {(promo.EstaActiva ? "activa" : "pausadía")}.");
+            NotificationService.ShowInfo($"La promoción '{promo.Titulo}' ahora está {(promo.EstaActiva ? "activa" : "pausada")}.");
         }
     }
 }
