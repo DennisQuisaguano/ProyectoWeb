@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../core/constants/app_colors.dart';
 import '../../data/models/promocion_model.dart';
 
@@ -27,12 +28,16 @@ class PromotionCard extends StatelessWidget {
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border.withOpacity(0.6),
+          color: isDark
+              ? AppColors.darkBorder
+              : AppColors.border.withOpacity(0.6),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.25) : Colors.black.withOpacity(0.04),
+            color: isDark
+                ? Colors.black.withOpacity(0.25)
+                : Colors.black.withOpacity(0.04),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -53,16 +58,21 @@ class PromotionCard extends StatelessWidget {
               Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(15),
+                    ),
                     child: Container(
                       height: isCompact ? 100 : 120,
                       width: double.infinity,
-                      color: isDark ? AppColors.darkSurface : AppColors.primaryLight,
+                      color: isDark
+                          ? AppColors.darkSurface
+                          : AppColors.primaryLight,
                       child: promocion.fullImagenUrl.isNotEmpty
                           ? Image.network(
                               promocion.fullImagenUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _buildPromoPlaceholder(),
+                              errorBuilder: (_, __, ___) =>
+                                  _buildPromoPlaceholder(),
                             )
                           : _buildPromoPlaceholder(),
                     ),
@@ -73,7 +83,10 @@ class PromotionCard extends StatelessWidget {
                     top: 8,
                     left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(20),
@@ -103,7 +116,10 @@ class PromotionCard extends StatelessWidget {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.accent,
                           borderRadius: BorderRadius.circular(8),
@@ -128,10 +144,15 @@ class PromotionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Nombre del Local
-                    if (promocion.localNombre != null && promocion.localNombre!.isNotEmpty)
+                    if (promocion.localNombre != null &&
+                        promocion.localNombre!.isNotEmpty)
                       Row(
                         children: [
-                          const Icon(Icons.storefront_rounded, size: 13, color: AppColors.primary),
+                          const Icon(
+                            Icons.storefront_rounded,
+                            size: 13,
+                            color: AppColors.primary,
+                          ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
@@ -139,7 +160,9 @@ class PromotionCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? AppColors.accentBlue : AppColors.primary,
+                                color: isDark
+                                    ? AppColors.accentBlue
+                                    : AppColors.primary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -150,7 +173,9 @@ class PromotionCard extends StatelessWidget {
                               promocion.campusNombre,
                               style: TextStyle(
                                 fontSize: 10.5,
-                                color: isDark ? AppColors.darkTextSecondary : AppColors.textMuted,
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.textMuted,
                               ),
                             ),
                         ],
@@ -163,7 +188,9 @@ class PromotionCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: isCompact ? 14 : 16,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -176,16 +203,18 @@ class PromotionCard extends StatelessWidget {
                         promocion.descripcion,
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.textSecondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     SizedBox(height: isCompact ? 6 : 10),
 
-                    // Precios y Días válidos
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // Precios y días válidos
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
@@ -194,7 +223,9 @@ class PromotionCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: isCompact ? 16 : 18,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? AppColors.accentBlue : AppColors.primary,
+                                color: isDark
+                                    ? AppColors.accentBlue
+                                    : AppColors.primary,
                               ),
                             ),
                             if (promocion.formattedPrecioOriginal != null) ...[
@@ -203,29 +234,38 @@ class PromotionCard extends StatelessWidget {
                                 promocion.formattedPrecioOriginal!,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: isDark ? AppColors.darkTextSecondary : AppColors.textMuted,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.textMuted,
                                   decoration: TextDecoration.lineThrough,
                                 ),
                               ),
                             ],
                           ],
                         ),
-                        if (promocion.diasValidos != null && promocion.diasValidos!.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isDark ? AppColors.darkSurface : AppColors.chipBackground,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              promocion.diasValidos!,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-                                fontWeight: FontWeight.w500,
-                              ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkSurface
+                                : AppColors.chipBackground,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            promocion.etiquetaDias,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
+                        ),
                       ],
                     ),
                   ],

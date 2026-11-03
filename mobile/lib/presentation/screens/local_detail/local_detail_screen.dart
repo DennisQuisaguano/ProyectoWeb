@@ -38,6 +38,7 @@ class LocalDetailScreen extends StatefulWidget {
 
 class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _descripcionExpandida = false;
 
   @override
   void initState() {
@@ -385,7 +386,7 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 220,
+              expandedHeight: 180,
               pinned: true,
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -500,264 +501,15 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
             SliverToBoxAdapter(
               child: Container(
                 color: theme.cardColor,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Estado de apertura y distancia
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: local.estaAbierto ? AppColors.success.withOpacity(0.15) : AppColors.error.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            local.estaAbierto ? '● Abierto ahora' : '● Cerrado',
-                            style: TextStyle(
-                              color: local.estaAbierto ? AppColors.success : AppColors.error,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        if (local.distanciaEnMetros != null) ...[
-                          const SizedBox(width: 10),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: isDark ? AppColors.darkSurface : AppColors.chipBackground,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.near_me_rounded, size: 13, color: AppColors.primary),
-                                const SizedBox(width: 4),
-                                Text(
-                                  local.formattedDistance,
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '(${local.formattedWalkingTime})',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-
-                    // Tarjeta destacada de Reputación y Reseñas (Ultra Legible y Clara)
-                    Container(
-                      margin: const EdgeInsets.only(top: 12, bottom: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkSurface : const Color(0xFFFEF3C7).withOpacity(0.4),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isDark ? AppColors.darkBorder : const Color(0xFFFCD34D),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.star_rounded, size: 16, color: Colors.white),
-                                const SizedBox(width: 3),
-                                Text(
-                                  local.calificacionPromedio > 0 ? local.calificacionPromedio.toStringAsFixed(1) : 'Nuevo',
-                                  style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 13),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  local.calificacionPromedio > 0
-                                      ? '${local.calificacionPromedio.toStringAsFixed(1)} de 5 estrellas'
-                                      : 'Sin calificaciones aún',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13.5,
-                                    color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                                  ),
-                                ),
-                                Text(
-                                  local.totalResenas > 0
-                                      ? '${local.totalResenas} opiniones de la comunidad UTA'
-                                      : 'Sé el primero en calificar este local',
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              _tabController.animateTo(2);
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                              child: Text(
-                                'Ver todas →',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? AppColors.accentBlue : AppColors.primary,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Descripción
-                    if (local.descripcion.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Text(
-                        local.descripcion,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-
-                    // Tarjeta de Ubicación & Cómo llegar (Ruta con mapa interactivo)
-                    Container(
-                      margin: const EdgeInsets.only(top: 12, bottom: 14),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkSurface : AppColors.chipBackground,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(Icons.location_on_rounded, size: 20, color: AppColors.primary),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${local.direccion}${local.referencia != null ? ' (${local.referencia})' : ''}',
-                                      style: TextStyle(
-                                        fontSize: 13.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    if (local.horarioApertura != null && local.horarioApertura!.isNotEmpty) ...[
-                                      const SizedBox(height: 3),
-                                      Row(
-                                        children: [
-                                          Icon(Icons.access_time_rounded, size: 14, color: isDark ? AppColors.darkTextSecondary : AppColors.textMuted),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Horario: ${local.horarioApertura}',
-                                            style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          // Botón interactivo "Ver Mapa & Cómo llegar (Ruta)"
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              icon: const Icon(Icons.map_rounded, size: 18),
-                              label: const Text(
-                                '📍 Ver Mapa & Cómo llegar (Ruta)',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: isDark ? AppColors.accentBlue : AppColors.primary,
-                                side: BorderSide(color: isDark ? AppColors.accentBlue : AppColors.primary, width: 1.5),
-                                backgroundColor: isDark ? AppColors.darkCard : Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 11),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: () {
-                                final loc = context.read<LocationProvider>();
-                                _showRouteModal(
-                                  context,
-                                  local,
-                                  loc.currentPosition?.latitude ?? loc.referenceLatitude,
-                                  loc.currentPosition?.longitude ?? loc.referenceLongitude,
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Botones de acción rápida: WhatsApp y Llamar (Touch Target >= 48dp)
-                    Row(
-                      children: [
-                        if (local.whatsApp != null && local.whatsApp!.isNotEmpty)
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                              label: const Text('WhatsApp'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF25D366),
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(0, 48),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: () => _openWhatsApp(local.whatsApp!, local.nombre),
-                            ),
-                          ),
-                        if (local.whatsApp != null && local.telefonoContacto != null)
-                          const SizedBox(width: 10),
-                        if (local.telefonoContacto != null && local.telefonoContacto!.isNotEmpty)
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              icon: const Icon(Icons.phone_outlined, size: 18),
-                              label: const Text('Llamar'),
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size(0, 48),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: () => _openPhoneCall(local.telefonoContacto!),
-                            ),
-                          ),
-                      ],
-                    ),
+                    _buildStatusRow(local, isDark),
+                    const SizedBox(height: 12),
+                    _buildQuickActions(local, isDark),
+                    const SizedBox(height: 12),
+                    _buildInfoBlock(local, isDark),
                   ],
                 ),
               ),
@@ -802,6 +554,187 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
         label: const Text('Calificar Local', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         onPressed: _showAddReviewDialog,
       ),
+    );
+  }
+
+  /// Estado de apertura, horario y distancia en una sola línea.
+  Widget _buildStatusRow(LocalModel local, bool isDark) {
+    final secundario = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final color = local.estaAbierto ? AppColors.success : AppColors.error;
+    final horario = local.horarioApertura;
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            local.estaAbierto ? '● Abierto ahora' : '● Cerrado',
+            style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+        ),
+        if (horario != null && horario.isNotEmpty)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.access_time_rounded, size: 14, color: secundario),
+              const SizedBox(width: 4),
+              Text(horario, style: TextStyle(fontSize: 12.5, color: secundario)),
+            ],
+          ),
+        if (local.distanciaEnMetros != null)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.near_me_rounded, size: 14, color: AppColors.primary),
+              const SizedBox(width: 4),
+              Text(
+                '${local.formattedDistance} · ${local.formattedWalkingTime}',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.accentBlue : AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  /// Acciones de decisión rápida: cómo llegar, WhatsApp y llamar.
+  Widget _buildQuickActions(LocalModel local, bool isDark) {
+    final tieneWhatsApp = local.whatsApp != null && local.whatsApp!.isNotEmpty;
+    final tieneTelefono = local.telefonoContacto != null && local.telefonoContacto!.isNotEmpty;
+    final acento = isDark ? AppColors.accentBlue : AppColors.primary;
+
+    final botones = <Widget>[
+      Expanded(
+        child: FilledButton.icon(
+          icon: const Icon(Icons.directions_rounded, size: 18),
+          label: const Text('Ruta'),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          onPressed: () {
+            final loc = context.read<LocationProvider>();
+            _showRouteModal(
+              context,
+              local,
+              loc.currentPosition?.latitude ?? loc.referenceLatitude,
+              loc.currentPosition?.longitude ?? loc.referenceLongitude,
+            );
+          },
+        ),
+      ),
+      if (tieneWhatsApp)
+        Expanded(
+          child: ElevatedButton.icon(
+            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+            label: const Text('WhatsApp'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF25D366),
+              foregroundColor: Colors.white,
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => _openWhatsApp(local.whatsApp!, local.nombre),
+          ),
+        ),
+      if (tieneTelefono)
+        Expanded(
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.phone_outlined, size: 18),
+            label: const Text('Llamar'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: acento,
+              side: BorderSide(color: acento, width: 1.2),
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => _openPhoneCall(local.telefonoContacto!),
+          ),
+        ),
+    ];
+
+    return Row(
+      children: [
+        for (var i = 0; i < botones.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          botones[i],
+        ],
+      ],
+    );
+  }
+
+  /// Dirección y descripción compactas; la descripción se expande bajo demanda.
+  Widget _buildInfoBlock(LocalModel local, bool isDark) {
+    final secundario = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final direccion = '${local.direccion}${local.referencia != null ? ' (${local.referencia})' : ''}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.location_on_rounded, size: 18, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                direccion,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (local.descripcion.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => setState(() => _descripcionExpandida = !_descripcionExpandida),
+            child: Text(
+              local.descripcion,
+              maxLines: _descripcionExpandida ? null : 2,
+              overflow: _descripcionExpandida ? TextOverflow.visible : TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 13.5, color: secundario, height: 1.4),
+            ),
+          ),
+          if (local.descripcion.length > 90)
+            GestureDetector(
+              onTap: () => setState(() => _descripcionExpandida = !_descripcionExpandida),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  _descripcionExpandida ? 'Ver menos' : 'Ver más',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppColors.accentBlue : AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ],
     );
   }
 

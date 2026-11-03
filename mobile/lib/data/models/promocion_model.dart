@@ -66,6 +66,38 @@ class PromocionModel {
       precioOriginal != null ? '\$${precioOriginal!.toStringAsFixed(2)}' : null;
   String get campusNombre => campusCercano != null ? (AppConstants.campusNames[campusCercano] ?? '') : '';
 
+  /// Texto corto de los días en que aplica: "Todos los días" o "Solo Lun, Mié".
+  String get etiquetaDias {
+    final dias = (diasValidos ?? '')
+        .split(',')
+        .map((d) => d.trim())
+        .where((d) => d.isNotEmpty)
+        .toList();
+    if (dias.isEmpty || dias.length >= 7) return 'Todos los días';
+
+    String abreviar(String dia) {
+      final clave = dia
+          .toLowerCase()
+          .replaceAll('á', 'a')
+          .replaceAll('é', 'e')
+          .replaceAll('í', 'i')
+          .replaceAll('ó', 'o')
+          .replaceAll('ú', 'u');
+      const abreviaturas = {
+        'lunes': 'Lun',
+        'martes': 'Mar',
+        'miercoles': 'Mié',
+        'jueves': 'Jue',
+        'viernes': 'Vie',
+        'sabado': 'Sáb',
+        'domingo': 'Dom',
+      };
+      return abreviaturas[clave] ?? dia;
+    }
+
+    return 'Solo ${dias.map(abreviar).join(', ')}';
+  }
+
   int get porcentajeDescuento {
     if (precioOriginal == null || precioOriginal! <= precioPromocional || precioOriginal! <= 0) {
       return 0;

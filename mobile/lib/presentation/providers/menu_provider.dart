@@ -59,6 +59,7 @@ class MenuProvider with ChangeNotifier {
     int? campus,
     int? categoria,
     double? precioMaximo,
+    bool soloPlatoDelDia = false,
   }) async {
     _isSearching = true;
     _errorMessage = null;
@@ -71,6 +72,7 @@ class MenuProvider with ChangeNotifier {
         categoria: categoria,
         precioMaximo: precioMaximo,
         soloDisponibles: true,
+        soloPlatoDelDia: soloPlatoDelDia,
       );
       _isSearching = false;
       notifyListeners();
