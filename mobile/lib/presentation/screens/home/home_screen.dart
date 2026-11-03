@@ -13,8 +13,7 @@ import '../../providers/promocion_provider.dart';
 import '../../../shared/widgets/puni_mascot.dart';
 import '../../widgets/empty_state_view.dart';
 import '../../widgets/local_card.dart';
-import '../../widgets/plato_del_dia_card.dart';
-import '../../widgets/promotion_card.dart';
+import '../../widgets/novedad_hoy_card.dart';
 import '../../widgets/skeleton_card.dart';
 import '../local_detail/local_detail_screen.dart';
 
@@ -100,6 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final menu = context.watch<MenuProvider>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    final novedades = NovedadHoy.intercalar(promo.globalPromotions, menu.platosDelDiaGlobal);
 
     final studentName = auth.currentUser?.nombreCompleto.split(' ').first ?? 'Estudiante';
 
@@ -369,82 +370,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-              // 3. Categorías de Comida con Chips Modernos Soft UI
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Categorías',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 44,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            _buildCategoryChip(
-                              label: 'Todos',
-                              icon: '🍴',
-                              isSelected: local.filterCategoria == null,
-                              isDark: isDark,
-                              onTap: () => local.setFilterCategoria(null),
-                            ),
-                            ...AppConstants.categoriasLocal.entries.map((entry) {
-                              final isSelected = local.filterCategoria == entry.key;
-                              final icon = AppConstants.categoriaIconos[entry.key] ?? '🍽️';
-                              return _buildCategoryChip(
-                                label: entry.value,
-                                icon: icon,
-                                isSelected: isSelected,
-                                isDark: isDark,
-                                onTap: () => local.setFilterCategoria(isSelected ? null : entry.key),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // 4. Sección: Ofertas de Hoy / Promociones
-              if (promo.globalPromotions.isNotEmpty) ...[
+              // 3. Carrusel único "Hoy": ofertas vigentes + platos del día
+              if (novedades.isNotEmpty) ...[
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Text('🔥', style: TextStyle(fontSize: 18)),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Ofertas de Hoy',
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                                color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'Hoy en tu campus',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                        if (widget.onNavigateTab != null)
+                        if (widget.onNavigateTab != null && promo.globalPromotions.isNotEmpty)
                           TextButton(
                             onPressed: () => widget.onNavigateTab!(3),
                             child: Text(
-                              'Ver todas →',
+                              'Ver ofertas →',
                               style: TextStyle(
                                 color: isDark ? AppColors.accentBlue : AppColors.primary,
                                 fontSize: 13,
@@ -458,82 +405,31 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 275,
+                    height: 196,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: promo.globalPromotions.length,
+                      itemCount: novedades.length,
                       itemBuilder: (context, index) {
-                        final p = promo.globalPromotions[index];
-                        return Container(
-                          width: 280,
-                          margin: const EdgeInsets.only(right: 14),
-                          child: PromotionCard(
-                            promocion: p,
-                            isCompact: true,
-                            onTap: () {
-                              promo.registrarClickPromocion(p.localId, p.titulo);
-                              final localMatch = local.locales.cast<LocalModel?>().firstWhere(
-                                (item) => item?.id == p.localId,
-                                orElse: () => null,
-                              );
-                              Navigator.push(
-                                context,
-                                SmoothPageRoute(
-                                  page: LocalDetailScreen(localId: p.localId, initialLocal: localMatch, initialTab: 1),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-
-              // 4b. Sección: Platos del día de cada local
-              if (menu.platosDelDiaGlobal.isNotEmpty) ...[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
-                    child: Row(
-                      children: [
-                        const Text('⭐', style: TextStyle(fontSize: 18)),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Platos del Día',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 190,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: menu.platosDelDiaGlobal.length,
-                      itemBuilder: (context, index) {
-                        final plato = menu.platosDelDiaGlobal[index];
-                        return PlatoDelDiaCard(
-                          plato: plato,
+                        final n = novedades[index];
+                        return NovedadHoyCard(
+                          novedad: n,
                           onTap: () {
+                            if (n.esOferta) {
+                              promo.registrarClickPromocion(n.localId, n.titulo);
+                            }
                             final localMatch = local.locales.cast<LocalModel?>().firstWhere(
-                              (item) => item?.id == plato.localId,
+                              (item) => item?.id == n.localId,
                               orElse: () => null,
                             );
                             Navigator.push(
                               context,
                               SmoothPageRoute(
-                                page: LocalDetailScreen(localId: plato.localId, initialLocal: localMatch),
+                                page: LocalDetailScreen(
+                                  localId: n.localId,
+                                  initialLocal: localMatch,
+                                  initialTab: n.esOferta ? 1 : 0,
+                                ),
                               ),
                             );
                           },
@@ -544,87 +440,72 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
 
-              // 5. Sección: Recomendado para ti (Puni sugiere)
-              if (local.recommendedLocales.isNotEmpty && local.filterCategoria == null) ...[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
-                    child: Row(
+              // 4. Categorías en una sola fila compacta
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 0, 0),
+                  child: SizedBox(
+                    height: 44,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.only(right: 16),
                       children: [
-                        const Text('⭐', style: TextStyle(fontSize: 18)),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Recomendado para ti',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                            letterSpacing: -0.3,
-                          ),
+                        _buildCategoryChip(
+                          label: 'Todos',
+                          icon: '🍴',
+                          isSelected: local.filterCategoria == null,
+                          isDark: isDark,
+                          onTap: () => local.setFilterCategoria(null),
                         ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: isDark ? AppColors.darkSurface : AppColors.primarySubtle,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            'Puni Top ⭐',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? AppColors.accentBlue : AppColors.primary,
-                            ),
-                          ),
-                        ),
+                        ...AppConstants.categoriasLocal.entries.map((entry) {
+                          final isSelected = local.filterCategoria == entry.key;
+                          final icon = AppConstants.categoriaIconos[entry.key] ?? '🍽️';
+                          return _buildCategoryChip(
+                            label: entry.value,
+                            icon: icon,
+                            isSelected: isSelected,
+                            isDark: isDark,
+                            onTap: () => local.setFilterCategoria(isSelected ? null : entry.key),
+                          );
+                        }),
                       ],
                     ),
                   ),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final l = local.recommendedLocales[index];
-                        return LocalCard(
-                          local: l,
-                          isFavorite: local.favoriteIds.contains(l.id),
-                          onToggleFavorite: () => local.toggleFavorite(l.id),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              SmoothPageRoute(
-                                page: LocalDetailScreen(localId: l.id, initialLocal: l),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      childCount: local.recommendedLocales.take(3).length,
-                    ),
-                  ),
-                ),
-              ],
+              ),
 
-              // 6. Sección: Locales Cercanos al Campus
+              // 5. Locales: título + orden (Más cercanos / Mejor valorados)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        local.filterCategoria != null
-                            ? 'Locales filtrados (${local.filteredLocales.length})'
-                            : 'Locales cercanos al campus (${local.filteredLocales.length})',
+                        'Locales (${local.filteredLocales.length})',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
                           color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           letterSpacing: -0.3,
                         ),
+                      ),
+                      Row(
+                        children: [
+                          _buildSortChip(
+                            label: 'Cercanos',
+                            isSelected: local.sortOrder == LocalSortOrder.cercanos,
+                            isDark: isDark,
+                            onTap: () => local.setSortOrder(LocalSortOrder.cercanos),
+                          ),
+                          const SizedBox(width: 6),
+                          _buildSortChip(
+                            label: 'Mejor valorados',
+                            isSelected: local.sortOrder == LocalSortOrder.mejorValorados,
+                            isDark: isDark,
+                            onTap: () => local.setSortOrder(LocalSortOrder.mejorValorados),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -662,6 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       (context, index) {
                         final l = local.filteredLocales[index];
                         return LocalCard(
+                          isCompact: true,
                           local: l,
                           isFavorite: local.favoriteIds.contains(l.id),
                           onToggleFavorite: () => local.toggleFavorite(l.id),
@@ -682,6 +564,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SliverToBoxAdapter(child: SizedBox(height: 28)),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSortChip({
+    required String label,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final acento = isDark ? AppColors.accentBlue : AppColors.primary;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 32),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? acento.withOpacity(0.14) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected ? acento : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
           ),
         ),
       ),

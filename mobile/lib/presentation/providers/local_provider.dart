@@ -7,6 +7,9 @@ import '../../data/datasources/resena_remote_datasource.dart';
 import '../../data/models/local_model.dart';
 import '../../data/models/resena_model.dart';
 
+/// Orden de la lista de locales en Inicio.
+enum LocalSortOrder { cercanos, mejorValorados }
+
 class LocalProvider with ChangeNotifier {
   final LocalRemoteDataSource _localDataSource;
   final ResenaRemoteDataSource _resenaDataSource;
@@ -59,6 +62,15 @@ class LocalProvider with ChangeNotifier {
   double? get filterPresupuestoMax => _filterPresupuestoMax;
   bool get filterSoloComidaRapida => _filterSoloComidaRapida;
 
+  LocalSortOrder _sortOrder = LocalSortOrder.cercanos;
+  LocalSortOrder get sortOrder => _sortOrder;
+
+  void setSortOrder(LocalSortOrder order) {
+    if (_sortOrder == order) return;
+    _sortOrder = order;
+    notifyListeners();
+  }
+
   /// Retorna los locales filtrados en memoria de manera reactiva e instantánea
   List<LocalModel> get filteredLocales {
     return _locales.where((local) {
@@ -87,7 +99,22 @@ class LocalProvider with ChangeNotifier {
         if (!matchNombre && !matchDesc && !matchDir) return false;
       }
       return true;
-    }).toList();
+    }).toList()
+      ..sort(_compareBySortOrder);
+  }
+
+  int _compareBySortOrder(LocalModel a, LocalModel b) {
+    if (_sortOrder == LocalSortOrder.mejorValorados) {
+      if (a.estaAbierto != b.estaAbierto) return a.estaAbierto ? -1 : 1;
+      return b.calificacionPromedio.compareTo(a.calificacionPromedio);
+    }
+    // Más cercanos: los que no tienen distancia calculada quedan al final.
+    final da = a.distanciaEnMetros;
+    final db = b.distanciaEnMetros;
+    if (da == null && db == null) return 0;
+    if (da == null) return 1;
+    if (db == null) return -1;
+    return da.compareTo(db);
   }
 
   /// Locales recomendados (ordenados por mejor calificación y abiertos)
