@@ -32,6 +32,7 @@ class MenuRemoteDataSource {
     int? categoria,
     bool? soloDisponibles = true,
     double? precioMaximo,
+    bool? soloPlatoDelDia,
   }) async {
     final queryParams = <String, dynamic>{};
     if (search != null && search.trim().isNotEmpty) queryParams['search'] = search.trim();
@@ -39,6 +40,7 @@ class MenuRemoteDataSource {
     if (categoria != null) queryParams['categoria'] = categoria;
     if (soloDisponibles != null) queryParams['soloDisponibles'] = soloDisponibles;
     if (precioMaximo != null) queryParams['precioMaximo'] = precioMaximo;
+    if (soloPlatoDelDia == true) queryParams['soloPlatoDelDia'] = true;
 
     final response = await _apiClient.get(
       'platos',

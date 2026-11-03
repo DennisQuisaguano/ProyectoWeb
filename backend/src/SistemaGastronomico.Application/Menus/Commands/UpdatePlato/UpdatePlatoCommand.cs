@@ -44,11 +44,13 @@ public class UpdatePlatoCommandHandler : IRequestHandler<UpdatePlatoCommand, Pla
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificacionService _notificacionService;
 
-    public UpdatePlatoCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
+    public UpdatePlatoCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser, INotificacionService notificacionService)
     {
         _context = context;
         _currentUser = currentUser;
+        _notificacionService = notificacionService;
     }
 
     public async Task<PlatoDto> Handle(UpdatePlatoCommand request, CancellationToken cancellationToken)
@@ -64,6 +66,8 @@ public class UpdatePlatoCommandHandler : IRequestHandler<UpdatePlatoCommand, Pla
 
         _currentUser.EnsureOwnerOrAdmin(plato.Local.PropietarioId);
 
+        var eraPlatoDelDia = plato.EsPlatoDelDia;
+
         plato.Nombre = request.Nombre.Trim();
         plato.Descripcion = request.Descripcion?.Trim() ?? string.Empty;
         plato.Precio = request.Precio;
@@ -74,6 +78,12 @@ public class UpdatePlatoCommandHandler : IRequestHandler<UpdatePlatoCommand, Pla
         plato.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (plato.EsPlatoDelDia && !eraPlatoDelDia)
+        {
+            await PlatoDelDiaNotificador.NotificarAsync(
+                _notificacionService, plato.Local.Nombre, plato.Nombre, plato.Precio, cancellationToken);
+        }
 
         return new PlatoDto(
             plato.Id,

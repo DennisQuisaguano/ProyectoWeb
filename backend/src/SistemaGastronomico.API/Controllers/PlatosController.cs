@@ -23,9 +23,10 @@ public class PlatosController : ApiControllerBase
         [FromQuery] CampusUTA? campus,
         [FromQuery] CategoriaPlato? categoria,
         [FromQuery] bool? soloDisponibles = true,
-        [FromQuery] decimal? precioMaximo = null)
+        [FromQuery] decimal? precioMaximo = null,
+        [FromQuery] bool? soloPlatoDelDia = null)
     {
-        var result = await Mediator.Send(new SearchPlatosQuery(search, campus, categoria, soloDisponibles, precioMaximo));
+        var result = await Mediator.Send(new SearchPlatosQuery(search, campus, categoria, soloDisponibles, precioMaximo, soloPlatoDelDia));
         return Ok(result);
     }
 

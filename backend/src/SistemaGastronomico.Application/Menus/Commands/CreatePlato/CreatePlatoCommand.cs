@@ -45,11 +45,13 @@ public class CreatePlatoCommandHandler : IRequestHandler<CreatePlatoCommand, Pla
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificacionService _notificacionService;
 
-    public CreatePlatoCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
+    public CreatePlatoCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser, INotificacionService notificacionService)
     {
         _context = context;
         _currentUser = currentUser;
+        _notificacionService = notificacionService;
     }
 
     public async Task<PlatoDto> Handle(CreatePlatoCommand request, CancellationToken cancellationToken)
@@ -79,6 +81,12 @@ public class CreatePlatoCommandHandler : IRequestHandler<CreatePlatoCommand, Pla
 
         _context.Platos.Add(plato);
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (plato.EsPlatoDelDia)
+        {
+            await PlatoDelDiaNotificador.NotificarAsync(
+                _notificacionService, local.Nombre, plato.Nombre, plato.Precio, cancellationToken);
+        }
 
         return new PlatoDto(
             plato.Id,

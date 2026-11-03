@@ -8,6 +8,8 @@ class MenuProvider with ChangeNotifier {
 
   List<PlatoModel> _localDishes = [];
   List<PlatoModel> _searchResults = [];
+  List<PlatoModel> _platosDelDiaGlobal = [];
+  int? _lastPlatosDelDiaCampus;
   bool _isLoading = false;
   bool _isSearching = false;
   String? _errorMessage;
@@ -17,6 +19,9 @@ class MenuProvider with ChangeNotifier {
 
   List<PlatoModel> get localDishes => _localDishes;
   List<PlatoModel> get searchResults => _searchResults;
+
+  /// Platos del día de todos los locales aprobados (inicio).
+  List<PlatoModel> get platosDelDiaGlobal => _platosDelDiaGlobal;
   bool get isLoading => _isLoading;
   bool get isSearching => _isSearching;
   String? get errorMessage => _errorMessage;
@@ -79,6 +84,24 @@ class MenuProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Carga los platos del día de todos los locales (opcionalmente por campus).
+  /// No muestra estado de carga: se actualiza en silencio para evitar parpadeos.
+  Future<void> fetchPlatosDelDia({int? campus}) async {
+    _lastPlatosDelDiaCampus = campus;
+    try {
+      _platosDelDiaGlobal = await _dataSource.searchPlatos(
+        campus: campus,
+        soloDisponibles: true,
+        soloPlatoDelDia: true,
+      ).then((lista) => lista.where((p) => p.esPlatoDelDia).toList());
+      notifyListeners();
+    } catch (_) {
+      // Se conserva la lista anterior si falla la actualización.
+    }
+  }
+
+  Future<void> refreshPlatosDelDia() => fetchPlatosDelDia(campus: _lastPlatosDelDiaCampus);
 
   void clearSearch() {
     _searchResults = [];

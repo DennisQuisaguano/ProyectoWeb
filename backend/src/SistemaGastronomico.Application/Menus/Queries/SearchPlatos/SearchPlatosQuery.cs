@@ -11,7 +11,8 @@ public record SearchPlatosQuery(
     CampusUTA? Campus = null,
     CategoriaPlato? Categoria = null,
     bool? SoloDisponibles = true,
-    decimal? PrecioMaximo = null
+    decimal? PrecioMaximo = null,
+    bool? SoloPlatoDelDia = null
 ) : IRequest<List<PlatoBusquedaDto>>;
 
 public class SearchPlatosQueryHandler : IRequestHandler<SearchPlatosQuery, List<PlatoBusquedaDto>>
@@ -43,6 +44,11 @@ public class SearchPlatosQueryHandler : IRequestHandler<SearchPlatosQuery, List<
         if (request.SoloDisponibles.HasValue && request.SoloDisponibles.Value)
         {
             query = query.Where(p => p.EstaDisponible);
+        }
+
+        if (request.SoloPlatoDelDia == true)
+        {
+            query = query.Where(p => p.EsPlatoDelDia);
         }
 
         if (request.PrecioMaximo.HasValue)

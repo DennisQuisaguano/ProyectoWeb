@@ -89,7 +89,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                           Navigator.push(
                             context,
                             SmoothPageRoute(
-                              page: LocalDetailScreen(localId: p.localId, initialLocal: localMatch),
+                              page: LocalDetailScreen(localId: p.localId, initialLocal: localMatch, initialTab: 1),
                             ),
                           );
                         },

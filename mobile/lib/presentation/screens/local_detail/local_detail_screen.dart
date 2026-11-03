@@ -22,10 +22,14 @@ class LocalDetailScreen extends StatefulWidget {
   final String localId;
   final LocalModel? initialLocal;
 
+  /// Pestaña inicial: 0 = Menú, 1 = Ofertas, 2 = Reseñas.
+  final int initialTab;
+
   const LocalDetailScreen({
     super.key,
     required this.localId,
     this.initialLocal,
+    this.initialTab = 0,
   });
 
   @override
@@ -38,7 +42,7 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTab.clamp(0, 2));
     // Esperar a que concluya la transición de entrada para asegurar 120 FPS sin bloqueos en el hilo principal
     Future.delayed(const Duration(milliseconds: 250), () {
       if (mounted) {
@@ -809,13 +813,30 @@ class _LocalDetailScreenState extends State<LocalDetailScreen> with SingleTicker
       return const Center(child: Text('No hay platos registrados en el menú todavía.'));
     }
 
-    return ListView.builder(
+    final delDia = menu.platosDelDia;
+    return ListView(
       padding: const EdgeInsets.all(16),
-      itemCount: menu.localDishes.length,
-      itemBuilder: (context, index) {
-        final plato = menu.localDishes[index];
-        return DishCard(plato: plato);
-      },
+      children: [
+        if (delDia.isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: Text(
+              '⭐ Platos del Día',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+            ),
+          ),
+          ...delDia.map((plato) => DishCard(plato: plato)),
+          const SizedBox(height: 6),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: Text(
+              'Todo el menú',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+        ...menu.localDishes.map((plato) => DishCard(plato: plato)),
+      ],
     );
   }
 

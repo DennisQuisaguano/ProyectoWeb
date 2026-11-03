@@ -66,7 +66,7 @@ public class NotificacionesController : ControllerBase
         var notificaciones = await _context.Notificaciones
             .Where(n => n.CreatedAt >= limiteFecha && n.IsActive)
             .OrderByDescending(n => n.CreatedAt)
-            .Take(20)
+            .Take(200)
             .Select(n => new
             {
                 n.Id,
@@ -76,7 +76,14 @@ public class NotificacionesController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(notificaciones);
+        // Se guarda una fila por estudiante; aquí se devuelve un solo aviso por evento.
+        var unicas = notificaciones
+            .GroupBy(n => new { n.Tipo, n.Mensaje, Minuto = n.CreatedAt.ToString("yyyyMMddHHmm") })
+            .Select(g => g.First())
+            .Take(20)
+            .ToList();
+
+        return Ok(unicas);
     }
 }
 

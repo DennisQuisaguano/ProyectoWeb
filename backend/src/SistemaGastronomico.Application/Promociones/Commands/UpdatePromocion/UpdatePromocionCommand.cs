@@ -65,10 +65,13 @@ public class UpdatePromocionCommandHandler : IRequestHandler<UpdatePromocionComm
         // Notificar a los estudiantes si la oferta se actualizó (cambio de fecha, día o precio)
         try
         {
-            var nombreLocal = promocion.Local?.Nombre ?? "un local de la UTA";
-            var precioTexto = $"${promocion.PrecioPromocional:F2}";
-            var mensaje = $"¡Oferta actualizada en {nombreLocal}! {promocion.Titulo} por {precioTexto}. Válida ahora.";
-            await _notificacionService.NotificarEstudiantesAsync("promocion", mensaje, cancellationToken);
+            if (PromocionDias.AplicaHoy(promocion.DiasValidos, DateTime.UtcNow))
+            {
+                var nombreLocal = promocion.Local?.Nombre ?? "un local de la UTA";
+                var precioTexto = $"${promocion.PrecioPromocional:F2}";
+                var mensaje = $"¡Oferta actualizada en {nombreLocal}! {promocion.Titulo} por {precioTexto}. Válida ahora.";
+                await _notificacionService.NotificarEstudiantesAsync("promocion", mensaje, cancellationToken);
+            }
         }
         catch
         {

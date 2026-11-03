@@ -96,12 +96,15 @@ public class CreatePromocionCommandHandler : IRequestHandler<CreatePromocionComm
         _context.Promociones.Add(promo);
         await _context.SaveChangesAsync(cancellationToken);
 
-        // Notificar a todos los estudiantes registrados
+        // Notificar a los estudiantes solo si la oferta aplica hoy (sin días = todos los días)
         try
         {
-            var precioTexto = $"${promo.PrecioPromocional:F2}";
-            var mensaje = $"¡Nueva oferta en {local.Nombre}! {promo.Titulo} por solo {precioTexto}.";
-            await _notificacionService.NotificarEstudiantesAsync("promocion", mensaje, cancellationToken);
+            if (PromocionDias.AplicaHoy(promo.DiasValidos, DateTime.UtcNow))
+            {
+                var precioTexto = $"${promo.PrecioPromocional:F2}";
+                var mensaje = $"¡Nueva oferta en {local.Nombre}! {promo.Titulo} por solo {precioTexto}.";
+                await _notificacionService.NotificarEstudiantesAsync("promocion", mensaje, cancellationToken);
+            }
         }
         catch
         {

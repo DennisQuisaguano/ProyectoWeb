@@ -12,11 +12,14 @@ class NotificacionProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  /// Se invoca cuando llega una oferta o un plato del día para refrescar las pantallas.
+  final VoidCallback? onNovedadesPublicadas;
+
   Timer? _pollingTimer;
   final Set<String> _notifiedIds = {};
   DateTime _lastCheckTime = DateTime.now().toUtc().subtract(const Duration(hours: 1));
 
-  NotificacionProvider({NotificacionRemoteDataSource? dataSource})
+  NotificacionProvider({NotificacionRemoteDataSource? dataSource, this.onNovedadesPublicadas})
       : _dataSource = dataSource ?? NotificacionRemoteDataSource() {
     startRealtimePolling();
   }
@@ -38,16 +41,20 @@ class NotificacionProvider with ChangeNotifier {
   Future<void> checkNewPromotionsAndNotify() async {
     try {
       final recientes = await _dataSource.getPublicasRecientes(desde: _lastCheckTime);
+      var hayNovedades = false;
       for (final notif in recientes) {
         if (!_notifiedIds.contains(notif.id)) {
           _notifiedIds.add(notif.id);
+          if (notif.tipo == 'promocion' || notif.tipo == 'plato_del_dia') hayNovedades = true;
 
           // Disparar notificación emergente nativa en la barra de Android
           await NotificationService.showNotification(
             id: notif.id.hashCode,
-            title: notif.tipo == 'promocion'
-                ? '🔥 ¡Nueva Oferta Universitaria UTA!'
-                : '📣 Aviso Gastronómico UTA',
+            title: switch (notif.tipo) {
+              'promocion' => '🔥 ¡Nueva Oferta Universitaria UTA!',
+              'plato_del_dia' => '⭐ ¡Nuevo Plato del Día!',
+              _ => '📣 Aviso Gastronómico UTA',
+            },
             body: notif.mensaje,
           );
 
@@ -58,6 +65,7 @@ class NotificacionProvider with ChangeNotifier {
           }
         }
       }
+      if (hayNovedades) onNovedadesPublicadas?.call();
       _lastCheckTime = DateTime.now().toUtc().subtract(const Duration(minutes: 1));
     } catch (_) {
       // Evitar spam de errores en el ciclo periódico

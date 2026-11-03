@@ -11,6 +11,8 @@ class PromocionProvider with ChangeNotifier {
   List<PromocionModel> _globalPromotions = [];
   List<PromocionModel> _localPromotions = [];
   bool _isLoading = false;
+  int? _lastCampus;
+  String? _currentLocalId;
   String? _errorMessage;
 
   PromocionProvider({
@@ -25,6 +27,7 @@ class PromocionProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<void> fetchGlobalPromotions({int? campus}) async {
+    _lastCampus = campus;
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -48,6 +51,7 @@ class PromocionProvider with ChangeNotifier {
   }
 
   Future<void> fetchPromotionsByLocal(String localId) async {
+    _currentLocalId = localId;
     try {
       _localPromotions = await _dataSource.getPromocionesByLocal(
         localId,
@@ -57,6 +61,24 @@ class PromocionProvider with ChangeNotifier {
     } catch (_) {
       _localPromotions = [];
       notifyListeners();
+    }
+  }
+
+  /// Recarga ofertas globales (y las del local abierto) sin mostrar el estado de carga.
+  /// Se usa cuando el backend avisa que se creó o actualizó una oferta.
+  Future<void> refreshSilently() async {
+    try {
+      _globalPromotions = await _dataSource.getPromocionesGlobales(
+        campus: _lastCampus,
+        soloActivas: true,
+      );
+      final localId = _currentLocalId;
+      if (localId != null) {
+        _localPromotions = await _dataSource.getPromocionesByLocal(localId, soloActivas: true);
+      }
+      notifyListeners();
+    } catch (_) {
+      // Se conserva la lista actual si falla la actualización.
     }
   }
 

@@ -11,11 +11,13 @@ public class TogglePlatoDelDiaCommandHandler : IRequestHandler<TogglePlatoDelDia
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificacionService _notificacionService;
 
-    public TogglePlatoDelDiaCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
+    public TogglePlatoDelDiaCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser, INotificacionService notificacionService)
     {
         _context = context;
         _currentUser = currentUser;
+        _notificacionService = notificacionService;
     }
 
     public async Task<bool> Handle(TogglePlatoDelDiaCommand request, CancellationToken cancellationToken)
@@ -35,6 +37,13 @@ public class TogglePlatoDelDiaCommandHandler : IRequestHandler<TogglePlatoDelDia
         plato.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (plato.EsPlatoDelDia)
+        {
+            await PlatoDelDiaNotificador.NotificarAsync(
+                _notificacionService, plato.Local.Nombre, plato.Nombre, plato.Precio, cancellationToken);
+        }
+
         return plato.EsPlatoDelDia;
     }
 }

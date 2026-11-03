@@ -8,10 +8,12 @@ import '../../../data/models/local_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/local_provider.dart';
 import '../../providers/location_provider.dart';
+import '../../providers/menu_provider.dart';
 import '../../providers/promocion_provider.dart';
 import '../../../shared/widgets/puni_mascot.dart';
 import '../../widgets/empty_state_view.dart';
 import '../../widgets/local_card.dart';
+import '../../widgets/plato_del_dia_card.dart';
 import '../../widgets/promotion_card.dart';
 import '../../widgets/skeleton_card.dart';
 import '../local_detail/local_detail_screen.dart';
@@ -38,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final location = context.read<LocationProvider>();
     final localProvider = context.read<LocalProvider>();
     final promoProvider = context.read<PromocionProvider>();
+    final menuProvider = context.read<MenuProvider>();
 
     // 1. Cargar campus guardado y favoritos de SharedPreferences inmediatamente (<5ms)
     await Future.wait([
@@ -57,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
         userLng: userLng,
       ),
       promoProvider.fetchGlobalPromotions(campus: campusId),
+      menuProvider.fetchPlatosDelDia(campus: campusId),
     ]);
 
     // 3. Obtener GPS en segundo plano y refrescar distancias cuando responda el sensor
@@ -73,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final location = context.read<LocationProvider>();
     final local = context.read<LocalProvider>();
     final promo = context.read<PromocionProvider>();
+    final menu = context.read<MenuProvider>();
 
     await location.setCampus(campusId);
     local.setFilterCampus(campusId);
@@ -83,6 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
       userLng: location.referenceLongitude,
     );
     promo.fetchGlobalPromotions(campus: campusId);
+    menu.fetchPlatosDelDia(campus: campusId);
   }
 
   @override
@@ -91,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final location = context.watch<LocationProvider>();
     final local = context.watch<LocalProvider>();
     final promo = context.watch<PromocionProvider>();
+    final menu = context.watch<MenuProvider>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -473,11 +480,63 @@ class _HomeScreenState extends State<HomeScreen> {
                               Navigator.push(
                                 context,
                                 SmoothPageRoute(
-                                  page: LocalDetailScreen(localId: p.localId, initialLocal: localMatch),
+                                  page: LocalDetailScreen(localId: p.localId, initialLocal: localMatch, initialTab: 1),
                                 ),
                               );
                             },
                           ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+
+              // 4b. Sección: Platos del día de cada local
+              if (menu.platosDelDiaGlobal.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
+                    child: Row(
+                      children: [
+                        const Text('⭐', style: TextStyle(fontSize: 18)),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Platos del Día',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 190,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: menu.platosDelDiaGlobal.length,
+                      itemBuilder: (context, index) {
+                        final plato = menu.platosDelDiaGlobal[index];
+                        return PlatoDelDiaCard(
+                          plato: plato,
+                          onTap: () {
+                            final localMatch = local.locales.cast<LocalModel?>().firstWhere(
+                              (item) => item?.id == plato.localId,
+                              orElse: () => null,
+                            );
+                            Navigator.push(
+                              context,
+                              SmoothPageRoute(
+                                page: LocalDetailScreen(localId: plato.localId, initialLocal: localMatch),
+                              ),
+                            );
+                          },
                         );
                       },
                     ),

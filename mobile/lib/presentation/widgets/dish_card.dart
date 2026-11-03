@@ -20,7 +20,6 @@ class DishCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(14),
@@ -35,7 +34,21 @@ class DishCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          // Toda la tarjeta lleva al local cuando se provee onTapLocal (búsqueda).
+          onTap: onTapLocal == null
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  onTapLocal!();
+                },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Imagen o placeholder del plato
@@ -181,6 +194,9 @@ class DishCard extends StatelessWidget {
             ),
           ),
         ],
+            ),
+          ),
+        ),
       ),
     );
   }

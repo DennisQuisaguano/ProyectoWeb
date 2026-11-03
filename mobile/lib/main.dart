@@ -23,7 +23,15 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LocalProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()),
         ChangeNotifierProvider(create: (_) => PromocionProvider()),
-        ChangeNotifierProvider(create: (_) => NotificacionProvider()),
+        ChangeNotifierProvider(
+          lazy: false,
+          create: (ctx) => NotificacionProvider(
+            onNovedadesPublicadas: () {
+              ctx.read<PromocionProvider>().refreshSilently();
+              ctx.read<MenuProvider>().refreshPlatosDelDia();
+            },
+          ),
+        ),
       ],
       child: const UtaGastronomiaApp(),
     ),

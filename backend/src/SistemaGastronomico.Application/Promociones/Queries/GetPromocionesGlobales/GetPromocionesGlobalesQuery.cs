@@ -61,6 +61,13 @@ public class GetPromocionesGlobalesQueryHandler : IRequestHandler<GetPromociones
             ))
             .ToListAsync(cancellationToken);
 
+        // Las promociones con días específicos solo se muestran el día que aplican.
+        if (request.SoloActivas == true)
+        {
+            var ahora = DateTime.UtcNow;
+            promociones = promociones.Where(p => PromocionDias.AplicaHoy(p.DiasValidos, ahora)).ToList();
+        }
+
         return promociones;
     }
 }
