@@ -23,6 +23,7 @@ public class RegisterModel
 
     [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
     [EmailAddress(ErrorMessage = "Ingrese un correo electrónico válido.")]
+    [RegularExpression(@"^[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}$", ErrorMessage = "El correo debe tener un formato válido (ej. usuario@uta.edu.ec).")]
     [MaxLength(150, ErrorMessage = "El correo no debe superar los 150 caracteres.")]
     public string Email { get; set; } = string.Empty;
 

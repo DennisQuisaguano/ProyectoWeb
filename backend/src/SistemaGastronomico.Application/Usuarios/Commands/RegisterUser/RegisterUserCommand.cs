@@ -28,6 +28,7 @@ public class RegisterUserCommandValidator : AbstractValidator<RegisterUserComman
         RuleFor(v => v.Email)
             .NotEmpty().WithMessage("El correo electrónico es requerido.")
             .EmailAddress().WithMessage("El correo electrónico no es válido.")
+            .Matches(@"^[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}$").WithMessage("El correo electrónico no tiene un formato válido (ej. usuario@uta.edu.ec).")
             .MaximumLength(150).WithMessage("El correo electrónico no debe exceder los 150 caracteres.");
 
         RuleFor(v => v.Password)

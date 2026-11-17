@@ -6,71 +6,138 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  static bool _initialized = false;
+
   static const String channelId = 'uta_gastronomia_channel';
   static const String channelName = 'Notificaciones UTA Gastronomía';
   static const String channelDescription =
       'Canal para avisos de ofertas, promociones diarias y novedades gastronómicas.';
 
   static Future<void> initialize({Function(String?)? onSelectNotification}) async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const darwinSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+    if (_initialized) return;
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: darwinSettings,
-    );
+    try {
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const darwinSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
 
-    await _notificationsPlugin.initialize(
-      settings: initSettings,
-      onDidReceiveNotificationResponse: (response) {
-        if (onSelectNotification != null) {
-          onSelectNotification(response.payload);
-        }
-      },
-    );
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: darwinSettings,
+      );
 
-    // Crear el Canal de Notificaciones para Android
-    final androidChannel = AndroidNotificationChannel(
-      channelId,
-      channelName,
-      description: channelDescription,
-      importance: Importance.high,
-      playSound: true,
-      enableVibration: true,
-    );
+      await _notificationsPlugin.initialize(
+        settings: initSettings,
+        onDidReceiveNotificationResponse: (response) {
+          if (onSelectNotification != null) {
+            onSelectNotification(response.payload);
+          }
+        },
+      );
 
-    final androidPlugin = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      // Crear el Canal de Notificaciones para Android
+      final androidChannel = AndroidNotificationChannel(
+        channelId,
+        channelName,
+        description: channelDescription,
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      );
 
-    if (androidPlugin != null) {
-      await androidPlugin.createNotificationChannel(androidChannel);
+      final androidPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+
+      if (androidPlugin != null) {
+        await androidPlugin.createNotificationChannel(androidChannel);
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error al inicializar NotificationService: $e');
+    }
+
+    _initialized = true;
+  }
+
+  /// Verifica si las notificaciones están permitidas a nivel del sistema operativo
+  static Future<bool> areNotificationsEnabled() async {
+    try {
+      final androidPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+
+      if (androidPlugin != null) {
+        final enabled = await androidPlugin.areNotificationsEnabled();
+        return enabled ?? false;
+      }
+
+      final iosPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+
+      if (iosPlugin != null) {
+        final options = await iosPlugin.checkPermissions();
+        return options?.isEnabled ?? false;
+      }
+
+      return true;
+    } catch (e) {
+      // En plataformas no soportadas o entornos de tests unitarios
+      return false;
+    }
+  }
+
+  /// Abre la pantalla de ajustes de notificaciones del sistema para esta aplicación
+  static Future<bool> openNotificationSettings() async {
+    try {
+      final androidPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        final opened = await androidPlugin.openAppNotificationSettings();
+        if (opened == true) return true;
+      }
+
+      final iosPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      if (iosPlugin != null) {
+        final opened = await iosPlugin.openAppNotificationSettings();
+        if (opened == true) return true;
+      }
+
+      final opened = await _notificationsPlugin.openAppNotificationSettings();
+      return opened ?? false;
+    } catch (e) {
+      if (kDebugMode) print('Error al abrir ajustes del sistema: $e');
+      return false;
     }
   }
 
   /// Solicita permisos de notificación al usuario (Android 13+ y iOS)
   static Future<bool> requestPermission() async {
-    final androidPlugin = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    await initialize();
 
-    if (androidPlugin != null) {
-      final granted = await androidPlugin.requestNotificationsPermission();
-      return granted ?? false;
-    }
+    try {
+      final androidPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 
-    final iosPlugin = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        final granted = await androidPlugin.requestNotificationsPermission();
+        return granted ?? false;
+      }
 
-    if (iosPlugin != null) {
-      final granted = await iosPlugin.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-      return granted ?? false;
+      final iosPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+
+      if (iosPlugin != null) {
+        final granted = await iosPlugin.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        return granted ?? false;
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error al solicitar permisos de notificación: $e');
     }
 
     return true;

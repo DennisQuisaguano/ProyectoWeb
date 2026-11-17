@@ -1,7 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+
 import '../../core/errors/failures.dart';
 import '../../core/services/notification_service.dart';
+import '../../core/services/storage_service.dart';
 import '../../data/datasources/notificacion_remote_datasource.dart';
 import '../../data/models/notificacion_model.dart';
 
@@ -15,12 +18,20 @@ class NotificacionProvider with ChangeNotifier {
   /// Se invoca cuando llega una oferta o un plato del día para refrescar las pantallas.
   final VoidCallback? onNovedadesPublicadas;
 
+  bool _systemNotificationsGranted = false;
+  bool _userNotificationsEnabled = true;
+
   Timer? _pollingTimer;
   final Set<String> _notifiedIds = {};
-  DateTime _lastCheckTime = DateTime.now().toUtc().subtract(const Duration(hours: 1));
+  DateTime _lastCheckTime = DateTime.now().toUtc().subtract(
+    const Duration(hours: 1),
+  );
 
-  NotificacionProvider({NotificacionRemoteDataSource? dataSource, this.onNovedadesPublicadas})
-      : _dataSource = dataSource ?? NotificacionRemoteDataSource() {
+  NotificacionProvider({
+    NotificacionRemoteDataSource? dataSource,
+    this.onNovedadesPublicadas,
+  }) : _dataSource = dataSource ?? NotificacionRemoteDataSource() {
+    checkNotificationStatus();
     startRealtimePolling();
   }
 
@@ -28,6 +39,66 @@ class NotificacionProvider with ChangeNotifier {
   int get unreadCount => _notificaciones.where((n) => !n.leida).length;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  bool get systemNotificationsGranted => _systemNotificationsGranted;
+  bool get userNotificationsEnabled => _userNotificationsEnabled;
+  bool get areNotificationsActive =>
+      _systemNotificationsGranted && _userNotificationsEnabled;
+
+  /// Verifica el estado actual del permiso en el SO y la preferencia guardada
+  Future<void> checkNotificationStatus() async {
+    try {
+      final granted = await NotificationService.areNotificationsEnabled();
+      final pref = await StorageService.getNotificationsEnabled();
+      _systemNotificationsGranted = granted;
+      _userNotificationsEnabled = pref;
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  /// Activa o desactiva las notificaciones.
+  /// Si se intenta activar y el sistema no tiene permisos, solicita permisos.
+  /// Retorna true si las notificaciones quedaron activas, o false si se requiere abrir Ajustes del SO.
+  Future<bool> setNotificationsEnabled(bool enable) async {
+    if (enable) {
+      bool isGranted = await NotificationService.areNotificationsEnabled();
+      if (!isGranted) {
+        await NotificationService.requestPermission();
+        isGranted = await NotificationService.areNotificationsEnabled();
+      }
+
+      _systemNotificationsGranted = isGranted;
+
+      if (!isGranted) {
+        // El usuario tiene denegadas las notificaciones en el sistema
+        notifyListeners();
+        return false;
+      }
+
+      _userNotificationsEnabled = true;
+      await StorageService.setNotificationsEnabled(true);
+
+      try {
+        final deviceToken = await NotificationService.getDeviceToken();
+        await registrarDispositivoToken(deviceToken, 'android');
+      } catch (_) {}
+
+      notifyListeners();
+      return true;
+    } else {
+      _userNotificationsEnabled = false;
+      await StorageService.setNotificationsEnabled(false);
+      notifyListeners();
+      return true;
+    }
+  }
+
+  /// Abre la pantalla de ajustes de notificaciones del sistema
+  Future<bool> openSettings() async {
+    final opened = await NotificationService.openNotificationSettings();
+    await checkNotificationStatus();
+    return opened;
+  }
 
   /// Inicia polling periódico cada 5 segundos para recibir notificaciones del backend en tiempo real
   void startRealtimePolling() {
@@ -40,23 +111,30 @@ class NotificacionProvider with ChangeNotifier {
   /// Consulta ofertas nuevas/actualizadas y emite notificación a la barra de estado de Android
   Future<void> checkNewPromotionsAndNotify() async {
     try {
-      final recientes = await _dataSource.getPublicasRecientes(desde: _lastCheckTime);
+      final recientes = await _dataSource.getPublicasRecientes(
+        desde: _lastCheckTime,
+      );
       var hayNovedades = false;
       for (final notif in recientes) {
         if (!_notifiedIds.contains(notif.id)) {
           _notifiedIds.add(notif.id);
-          if (notif.tipo == 'promocion' || notif.tipo == 'plato_del_dia') hayNovedades = true;
+          if (notif.tipo == 'promocion' || notif.tipo == 'plato_del_dia') {
+            hayNovedades = true;
+          }
 
-          // Disparar notificación emergente nativa en la barra de Android
-          await NotificationService.showNotification(
-            id: notif.id.hashCode,
-            title: switch (notif.tipo) {
-              'promocion' => '🔥 ¡Nueva Oferta Universitaria UTA!',
-              'plato_del_dia' => '⭐ ¡Nuevo Plato del Día!',
-              _ => '📣 Aviso Gastronómico UTA',
-            },
-            body: notif.mensaje,
-          );
+          // Disparar notificación emergente nativa solo si el usuario las tiene activas.
+          // Con las notificaciones pausadas igual se refrescan las pantallas.
+          if (areNotificationsActive) {
+            await NotificationService.showNotification(
+              id: notif.id.hashCode,
+              title: switch (notif.tipo) {
+                'promocion' => '🔥 ¡Nueva Oferta Universitaria UTA!',
+                'plato_del_dia' => '⭐ ¡Nuevo Plato del Día!',
+                _ => '📣 Aviso Gastronómico UTA',
+              },
+              body: notif.mensaje,
+            );
+          }
 
           // Agregar al listado en memoria si no estaba
           if (!_notificaciones.any((n) => n.id == notif.id)) {
@@ -66,7 +144,9 @@ class NotificacionProvider with ChangeNotifier {
         }
       }
       if (hayNovedades) onNovedadesPublicadas?.call();
-      _lastCheckTime = DateTime.now().toUtc().subtract(const Duration(minutes: 1));
+      _lastCheckTime = DateTime.now().toUtc().subtract(
+        const Duration(minutes: 1),
+      );
     } catch (_) {
       // Evitar spam de errores en el ciclo periódico
     }
@@ -112,7 +192,10 @@ class NotificacionProvider with ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> registrarDispositivoToken(String token, String plataforma) async {
+  Future<void> registrarDispositivoToken(
+    String token,
+    String plataforma,
+  ) async {
     try {
       await _dataSource.registrarDispositivo(token, plataforma);
     } catch (_) {}

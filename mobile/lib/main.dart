@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/app_constants.dart';
+import 'core/services/notification_service.dart';
 import 'core/services/storage_service.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/providers/auth_provider.dart';
@@ -14,9 +15,17 @@ import 'presentation/screens/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageService.init();
+  await NotificationService.initialize();
 
-  runApp(
-    MultiProvider(
+  runApp(const UtaGastronomiaApp());
+}
+
+class UtaGastronomiaApp extends StatelessWidget {
+  const UtaGastronomiaApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
@@ -33,23 +42,14 @@ void main() async {
           ),
         ),
       ],
-      child: const UtaGastronomiaApp(),
-    ),
-  );
-}
-
-class UtaGastronomiaApp extends StatelessWidget {
-  const UtaGastronomiaApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Soporte automático a preferencias del SO
-      home: const SplashScreen(),
+      child: MaterialApp(
+        title: AppConstants.appName,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system, // Soporte automático a preferencias del SO
+        home: const SplashScreen(),
+      ),
     );
   }
 }

@@ -90,6 +90,7 @@ class StorageService {
   }
 
   static const String _onboardingSeenKey = 'has_seen_onboarding_v1';
+  static const String _notificationsEnabledKey = 'notifications_enabled_pref';
 
   static Future<bool> hasSeenOnboarding() async {
     await init();
@@ -99,6 +100,17 @@ class StorageService {
   static Future<void> setOnboardingSeen() async {
     await init();
     await _prefs!.setBool(_onboardingSeenKey, true);
+  }
+
+  // Preferencias de notificaciones dentro de la app
+  static Future<bool> getNotificationsEnabled() async {
+    await init();
+    return _prefs!.getBool(_notificationsEnabledKey) ?? true;
+  }
+
+  static Future<void> setNotificationsEnabled(bool enabled) async {
+    await init();
+    await _prefs!.setBool(_notificationsEnabledKey, enabled);
   }
 
   static Future<void> clearSession() async {

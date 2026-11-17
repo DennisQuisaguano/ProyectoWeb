@@ -91,14 +91,19 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     final notificaciones = context.read<NotificacionProvider>();
 
     try {
-      // 1. Permisos y Token FCM en segundo plano
-      NotificationService.requestPermission().then((_) async {
-        try {
-          final deviceToken = await NotificationService.getDeviceToken();
-          if (auth.isAuthenticated) {
-            await notificaciones.registrarDispositivoToken(deviceToken, 'android');
-          }
-        } catch (_) {}
+      // 1. Inicialización de notificaciones, permisos y Token en segundo plano
+      NotificationService.initialize().then((_) {
+        NotificationService.requestPermission().then((granted) async {
+          try {
+            await notificaciones.checkNotificationStatus();
+            if (granted) {
+              final deviceToken = await NotificationService.getDeviceToken();
+              if (auth.isAuthenticated) {
+                await notificaciones.registrarDispositivoToken(deviceToken, 'android');
+              }
+            }
+          } catch (_) {}
+        });
       });
 
       _updateProgress(0.35);

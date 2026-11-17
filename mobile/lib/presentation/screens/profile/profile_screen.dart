@@ -6,20 +6,49 @@ import '../../../core/theme/smooth_page_route.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/local_provider.dart';
 import '../../providers/location_provider.dart';
+import '../../providers/notificacion_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/local_card.dart';
 import '../../../shared/widgets/puni_mascot.dart';
 import '../auth/login_screen.dart';
 import '../local_detail/local_detail_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NotificacionProvider>().checkNotificationStatus();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<NotificacionProvider>().checkNotificationStatus();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final location = context.watch<LocationProvider>();
     final localProv = context.watch<LocalProvider>();
+    final notifProv = context.watch<NotificacionProvider>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -180,7 +209,15 @@ class ProfileScreen extends StatelessWidget {
                           color: isDark ? AppColors.darkSurface : AppColors.primarySubtle,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Icons.notifications_active_rounded, color: isDark ? AppColors.accentBlue : AppColors.primary, size: 20),
+                        child: Icon(
+                          notifProv.areNotificationsActive
+                              ? Icons.notifications_active_rounded
+                              : Icons.notifications_off_rounded,
+                          color: notifProv.areNotificationsActive
+                              ? (isDark ? AppColors.accentBlue : AppColors.primary)
+                              : (isDark ? AppColors.darkTextSecondary : AppColors.textMuted),
+                          size: 20,
+                        ),
                       ),
                       title: Text(
                         'Avisos de Promociones',
@@ -191,14 +228,27 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                       subtitle: Text(
-                        'Recibir ofertas y descuentos del día',
-                        style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
+                        !notifProv.systemNotificationsGranted
+                            ? 'Permisos desactivados en el teléfono (Toca para activar)'
+                            : !notifProv.userNotificationsEnabled
+                                ? 'Notificaciones pausadas en la app'
+                                : 'Recibir ofertas y descuentos del día',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: !notifProv.systemNotificationsGranted
+                              ? AppColors.error
+                              : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
+                          fontWeight: !notifProv.systemNotificationsGranted ? FontWeight.w500 : FontWeight.normal,
+                        ),
                       ),
                       trailing: Switch(
-                        value: true,
+                        value: notifProv.areNotificationsActive,
                         activeColor: isDark ? AppColors.accentBlue : AppColors.primary,
-                        onChanged: (val) {},
+                        onChanged: (val) => _handleNotificationToggle(notifProv, val),
                       ),
+                      onTap: !notifProv.systemNotificationsGranted
+                          ? () => _showPermissionSettingsDialog(notifProv)
+                          : () => _handleNotificationToggle(notifProv, !notifProv.areNotificationsActive),
                     ),
                     Divider(height: 1, indent: 56, color: isDark ? AppColors.darkBorder : AppColors.border),
                     ListTile(
@@ -365,6 +415,94 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _handleNotificationToggle(
+    NotificacionProvider notifProv,
+    bool enable,
+  ) async {
+    final success = await notifProv.setNotificationsEnabled(enable);
+    if (!mounted) return;
+
+    if (!success && enable) {
+      _showPermissionSettingsDialog(notifProv);
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            enable
+                ? '🔔 Notificaciones de promociones activadas'
+                : '🔕 Notificaciones de promociones pausadas',
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _showPermissionSettingsDialog(NotificacionProvider notifProv) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          backgroundColor: theme.cardColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : AppColors.primarySubtle,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.notifications_active_rounded, color: isDark ? AppColors.accentBlue : AppColors.primary),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Activar Notificaciones',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Las notificaciones para UTA Gastronomía están desactivadas en los ajustes de tu teléfono.\n\nPara enterarte de promociones, descuentos y avisos universitarios al instante, por favor habilita las notificaciones en Ajustes del sistema.',
+            style: TextStyle(
+              fontSize: 13.5,
+              height: 1.45,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: Text(
+                'Cancelar',
+                style: TextStyle(color: isDark ? AppColors.darkTextSecondary : AppColors.textMuted),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () async {
+                Navigator.pop(dialogCtx);
+                await notifProv.openSettings();
+              },
+              child: const Text('Abrir Ajustes'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
