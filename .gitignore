@@ -489,3 +489,6 @@ $RECYCLE.BIN/
 **/mobile/.pub/
 **/mobile/android/.gradle/
 **/mobile/android/local.properties
+
+# Archivos subidos por usuarios (certificados RUC e imagenes): no van al repositorio
+backend/src/SistemaGastronomico.API/wwwroot/uploads/
