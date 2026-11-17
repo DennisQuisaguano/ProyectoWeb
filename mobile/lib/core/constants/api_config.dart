@@ -1,5 +1,5 @@
 class ApiConfig {
-  static const String host = '192.168.0.104:5050';
+  static const String host = '192.168.1.190:5050';
 
   /// URL Base de la API REST
   static const String baseUrl = 'http://$host/api';
